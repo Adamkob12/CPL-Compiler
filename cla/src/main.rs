@@ -78,10 +78,6 @@ fn compile(source_code: String) -> String {
     let mut output = String::new();
 
     while let Some((lexeme, token)) = lexer.get_next_token() {
-        println!("\nMATCHED\n{}\n", lexeme.0);
-        println!("{}\n", token);
-        println!("{}\n", token._get_id());
-
         output.push_str(lexeme.0);
         output.push_str(format!(": {}\n", token).as_str());
     }

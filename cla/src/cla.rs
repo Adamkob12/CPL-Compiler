@@ -40,21 +40,15 @@ impl<'a, 'b: 'a> Lexer<'a> {
         }
 
         let mut line = &self.lines[self.current_line][self.current_char..];
-        // debug line
-        println!("line: {}", line);
-        println!("line len: {}", line.len());
-        println!("current_char: {}", self.current_char);
 
         let mut regex_matches = self.regex_set.matches(line);
         while !regex_matches.matched_any() {
-            println!("didn't match {}", line);
             line = &line[..(line.len() - 1)];
             regex_matches = self.regex_set.matches(line);
         }
 
         let match_index = regex_matches.iter().next().unwrap();
         let matched = &REGEX_TABLE[match_index].0;
-        println!("matched {}", matched.get_id());
 
         self.current_char += line.len();
         match matched {
