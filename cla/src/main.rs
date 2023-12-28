@@ -42,8 +42,6 @@ fn main() {
                 .with_extension(OUTPUT_FILE_EXTENSION),
         );
 
-        dbg!(&output_file_path);
-
         let file_extension = input_file_path.extension();
 
         if file_extension.is_none() {

@@ -63,14 +63,10 @@ impl<'a, 'b: 'a> Lexer<'a> {
                     eprintln!("Error at line {}: {}", self.current_line, err);
                     self.new_line();
                 }
-                _ => {
-                    dbg!("boo");
-                }
+                _ => {}
             },
             RegexMatch::Token(token) if !self.in_comment => return Some((Lexeme(line), *token)),
-            _ => {
-                dbg!("boo2");
-            }
+            _ => {}
         }
 
         // If we didn't return a token, then we need to get the next one.
