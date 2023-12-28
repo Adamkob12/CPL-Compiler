@@ -1,0 +1,28 @@
+1231 : Num
+hi: Ident
+while: While
+if: If
+(: LParen
+l: Ident
+): RParen
+if: If
+if: If
+if: If
+if: If
+if: If
+While: Ident
+x: Ident
+==: RELOP
+1 : Num
+{: LCurly
+if: If
+x: Ident
+>: RELOP
+0 : Num
+{: LCurly
+z: Ident
+=: Equals
+x: Ident
++ y: ADDOP
+}: RCurly
+}: RCurly
