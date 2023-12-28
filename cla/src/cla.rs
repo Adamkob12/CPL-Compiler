@@ -14,6 +14,7 @@ pub struct Lexer<'a> {
     regex_set: regex::RegexSet,
 }
 
+// Ignore the lifetimes, they are just rust boiler-plate.
 impl<'a, 'b: 'a> Lexer<'a> {
     pub fn new(source_code: &'b str) -> Lexer {
         Lexer {
@@ -30,6 +31,7 @@ impl<'a, 'b: 'a> Lexer<'a> {
         self.current_char = 0;
     }
 
+    // The main function of the Lexer
     pub fn get_next_token(&mut self) -> Option<(Lexeme<'a>, Token)> {
         if self.current_line >= self.lines.len() {
             return None;

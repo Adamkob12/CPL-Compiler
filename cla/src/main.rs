@@ -12,9 +12,6 @@ const INPUT_FILE_EXTENSION: &str = "ou";
 const OUTPUT_FILE_EXTENSION: &str = "tok";
 
 fn main() {
-    eprintln!("Adam Kobzan");
-    eprintln!("328289855");
-
     let input_dir = Path::new(INPUT_DIRECTORY);
     let output_dir = Path::new(OUTPUT_DIRECTORY);
 
@@ -80,5 +77,5 @@ fn compile(source_code: String) -> String {
         output.push_str(format!(": {}\n", token).as_str());
     }
 
-    output
+    return output;
 }

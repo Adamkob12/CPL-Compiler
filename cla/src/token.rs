@@ -22,9 +22,9 @@ pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
     (RegexMatch::from_token_id(SEMICOLON_ID), r"^;$"),
     (RegexMatch::from_token_id(EQUALS_ID), r"^=$"),
     (RegexMatch::from_token_id(RELOP_ID), r"^(==|!=|<|>|<=|>=)$"),
-    (RegexMatch::from_token_id(ADDOP_ID), r"^\+|-$"),
-    (RegexMatch::from_token_id(MULOP_ID), r"^\*|/$"),
-    (RegexMatch::from_token_id(OR_ID), r"^\|\|$"),
+    (RegexMatch::from_token_id(ADDOP_ID), r"^(\+|-)$"),
+    (RegexMatch::from_token_id(MULOP_ID), r"^(\*|/)$"),
+    (RegexMatch::from_token_id(OR_ID), r"^\|\)$"),
     (RegexMatch::from_token_id(AND_ID), r"^&&$"),
     (RegexMatch::from_token_id(NOT_ID), r"^!$"),
     (
@@ -37,8 +37,8 @@ pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
     ),
     (RegexMatch::from_token_id(NUM_ID), r"^[0-9]+(.[0-9]*)? $"),
     (RegexMatch::NonToken(NonToken::Spaces), r"^[ \t]+$"),
-    (RegexMatch::NonToken(NonToken::StartComment), r"^/\*"),
-    (RegexMatch::NonToken(NonToken::EndComment), r"^\*/"),
+    (RegexMatch::NonToken(NonToken::StartComment), r"^/\*$"),
+    (RegexMatch::NonToken(NonToken::EndComment), r"^\*/$"),
     (
         RegexMatch::NonToken(NonToken::Error(UNRECOGNIZED_TOKEN_ERR)),
         r"^.$",
@@ -66,7 +66,7 @@ impl RegexMatch {
         RegexMatch::Token(TOKEN_TABLE[(id - STARTING_TOKEN_ID) as usize])
     }
 
-    pub fn get_id(&self) -> TokenID {
+    pub fn _get_id(&self) -> TokenID {
         match self {
             RegexMatch::NonToken(a) if matches!(a, NonToken::Spaces) => 0,
             RegexMatch::Token(token) => token._get_id(),
@@ -104,9 +104,9 @@ impl Token {
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Token::Keyword(keyword) => write!(f, "{:?}", keyword),
-            Token::Symbol(symbol) => write!(f, "{:?}", symbol),
-            Token::Operator(operator) => write!(f, "{:?}", operator),
+            Token::Keyword(keyword) => write!(f, "{:?} (Keyword)", keyword),
+            Token::Symbol(symbol) => write!(f, "{:?} (Symbol)", symbol),
+            Token::Operator(operator) => write!(f, "{:?} (Operator)", operator),
             Token::Additional(additional) => write!(f, "{:?}", additional),
         }
     }
