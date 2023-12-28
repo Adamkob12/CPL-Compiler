@@ -12,6 +12,7 @@ const INPUT_FILE_EXTENSION: &str = "ou";
 const OUTPUT_FILE_EXTENSION: &str = "tok";
 
 fn main() {
+
     let input_dir = Path::new(INPUT_DIRECTORY);
     let output_dir = Path::new(OUTPUT_DIRECTORY);
 
