@@ -35,13 +35,17 @@ pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
         RegexMatch::from_token_id(IDENT_ID),
         r"^[a-zA-Z][a-zA-Z0-9]*$",
     ),
-    (RegexMatch::from_token_id(NUM_ID), r"^[0-9]+(.[0-9]*)? $"),
+    (RegexMatch::from_token_id(NUM_ID), r"^[0-9]+(.[0-9]*)?$"),
     (RegexMatch::NonToken(NonToken::Spaces), r"^[ \t]+$"),
     (RegexMatch::NonToken(NonToken::StartComment), r"^/\*$"),
     (RegexMatch::NonToken(NonToken::EndComment), r"^\*/$"),
     (
         RegexMatch::NonToken(NonToken::Error(UNRECOGNIZED_TOKEN_ERR)),
         r"^.$",
+    ),
+    (
+        RegexMatch::NonToken(NonToken::Error(UNRECOGNIZED_TOKEN_ERR)),
+        r"^[0-9]+(.[0-9]*)?[a-zA-Z]+$",
     ),
 ];
 
