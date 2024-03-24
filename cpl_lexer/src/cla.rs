@@ -5,7 +5,6 @@ pub struct Lexeme<'a>(pub &'a str);
 
 // A struct that represents the Lexer
 // # ignore the lifetimes, they are just rust boiler-plate.
-// # &str ~ *char
 pub struct Lexer<'a> {
     lines: Vec<&'a str>,
     current_line: usize,

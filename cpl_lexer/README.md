@@ -1,5 +1,3 @@
-# Installation guide
-
 ## Installing Rust on your operating system
 
 This Rust's official guide to installing Rust (and Cargo - the main Rust toolchain):
