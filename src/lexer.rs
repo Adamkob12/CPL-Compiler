@@ -1,4 +1,4 @@
-use super::token::*;
+use crate::token::*;
 
 #[repr(transparent)]
 pub struct Lexeme<'a>(pub &'a str);
