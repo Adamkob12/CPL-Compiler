@@ -1,23 +1,28 @@
 use crate::token::*;
 
 #[repr(transparent)]
-pub struct Lexeme<'a>(pub &'a str);
+pub struct Lexeme(pub Box<str>);
+
+impl<'a> Clone for Lexeme {
+    fn clone(&self) -> Self {
+        Self(self.0.clone())
+    }
+}
 
 // A struct that represents the Lexer
 // # ignore the lifetimes, they are just rust boiler-plate.
-pub struct Lexer<'a> {
-    lines: Vec<&'a str>,
+pub struct Lexer {
+    lines: Vec<String>,
     current_line: usize,
     current_char: usize,
     in_comment: bool,
     regex_set: regex::RegexSet,
 }
 
-// Ignore the lifetimes, they are just rust boiler-plate.
-impl<'a, 'b: 'a> Lexer<'a> {
-    pub fn new(source_code: &'b str) -> Lexer {
+impl Lexer {
+    pub fn new(source_code: String) -> Lexer {
         Lexer {
-            lines: source_code.lines().collect(),
+            lines: source_code.lines().map(|slc| String::from(slc)).collect(),
             current_line: 0,
             current_char: 0,
             in_comment: false,
@@ -31,7 +36,7 @@ impl<'a, 'b: 'a> Lexer<'a> {
     }
 
     // The main function of the Lexer
-    pub fn get_next_token(&mut self) -> Option<(Lexeme<'a>, Token)> {
+    pub fn get_next_token(&mut self) -> Option<(Lexeme, Token)> {
         if self.current_line >= self.lines.len() {
             return None;
         }
@@ -66,11 +71,22 @@ impl<'a, 'b: 'a> Lexer<'a> {
                 }
                 _ => {}
             },
-            RegexMatch::Token(token) if !self.in_comment => return Some((Lexeme(line), *token)),
+            RegexMatch::Token(token) if !self.in_comment => {
+                return Some((Lexeme(line.into()), *token))
+            }
             _ => {}
         }
 
         // If we didn't return a token, then we need to get the next one.
         return self.get_next_token();
+    }
+
+    // Lex all the tokens at once
+    pub fn get_all_tokens(mut self) -> Vec<(Lexeme, Token)> {
+        let mut toks = Vec::new();
+        while let Some(tok) = self.get_next_token() {
+            toks.push(tok);
+        }
+        toks
     }
 }

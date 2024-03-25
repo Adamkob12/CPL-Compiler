@@ -73,7 +73,7 @@ impl RegexMatch {
     pub fn _get_id(&self) -> TokenID {
         match self {
             RegexMatch::NonToken(a) if matches!(a, NonToken::Spaces) => 0,
-            RegexMatch::Token(token) => token._get_id(),
+            RegexMatch::Token(token) => token.id(),
             _ => 1,
         }
     }
@@ -83,10 +83,11 @@ pub enum NonToken {
     Spaces,
     StartComment,
     EndComment,
+    EOF,
     Error(&'static str),
 }
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq, Eq)]
 pub enum Token {
     Keyword(Keyword),
     Symbol(Symbol),
@@ -95,7 +96,7 @@ pub enum Token {
 }
 
 impl Token {
-    pub fn _get_id(&self) -> TokenID {
+    pub fn id(&self) -> TokenID {
         match self {
             Token::Keyword(keyword) => *keyword as TokenID,
             Token::Symbol(symbol) => *symbol as TokenID,
@@ -147,38 +148,38 @@ const TOKEN_TABLE: &'static [Token] = &[
     Token::Additional(Additional::Num),
 ];
 
-const BREAK_ID: TokenID = 10;
-const CASE_ID: TokenID = 11;
-const DEFAULT_ID: TokenID = 12;
-const ELSE_ID: TokenID = 13;
-const FLOAT_ID: TokenID = 14;
-const IF_ID: TokenID = 15;
-const INPUT_ID: TokenID = 16;
-const INT_ID: TokenID = 17;
-const OUTPUT_ID: TokenID = 18;
-const SWITCH_ID: TokenID = 19;
-const WHILE_ID: TokenID = 20;
-const RPAREN_ID: TokenID = 21;
-const LPAREN_ID: TokenID = 22;
-const RCURLY_ID: TokenID = 23;
-const LCURLY_ID: TokenID = 24;
-const COMMA_ID: TokenID = 25;
-const COLON_ID: TokenID = 26;
-const SEMICOLON_ID: TokenID = 27;
-const EQUALS_ID: TokenID = 28;
-const RELOP_ID: TokenID = 29;
-const ADDOP_ID: TokenID = 30;
-const MULOP_ID: TokenID = 31;
-const OR_ID: TokenID = 32;
-const AND_ID: TokenID = 33;
-const NOT_ID: TokenID = 34;
-const CAST_ID: TokenID = 35;
-const IDENT_ID: TokenID = 36;
-const NUM_ID: TokenID = 37;
+pub const BREAK_ID: TokenID = 10;
+pub const CASE_ID: TokenID = 11;
+pub const DEFAULT_ID: TokenID = 12;
+pub const ELSE_ID: TokenID = 13;
+pub const FLOAT_ID: TokenID = 14;
+pub const IF_ID: TokenID = 15;
+pub const INPUT_ID: TokenID = 16;
+pub const INT_ID: TokenID = 17;
+pub const OUTPUT_ID: TokenID = 18;
+pub const SWITCH_ID: TokenID = 19;
+pub const WHILE_ID: TokenID = 20;
+pub const RPAREN_ID: TokenID = 21;
+pub const LPAREN_ID: TokenID = 22;
+pub const RCURLY_ID: TokenID = 23;
+pub const LCURLY_ID: TokenID = 24;
+pub const COMMA_ID: TokenID = 25;
+pub const COLON_ID: TokenID = 26;
+pub const SEMICOLON_ID: TokenID = 27;
+pub const EQUALS_ID: TokenID = 28;
+pub const RELOP_ID: TokenID = 29;
+pub const ADDOP_ID: TokenID = 30;
+pub const MULOP_ID: TokenID = 31;
+pub const OR_ID: TokenID = 32;
+pub const AND_ID: TokenID = 33;
+pub const NOT_ID: TokenID = 34;
+pub const CAST_ID: TokenID = 35;
+pub const IDENT_ID: TokenID = 36;
+pub const NUM_ID: TokenID = 37;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u16)]
-enum Keyword {
+pub enum Keyword {
     Break = BREAK_ID,
     Case = CASE_ID,
     Default = DEFAULT_ID,
@@ -192,9 +193,9 @@ enum Keyword {
     While = WHILE_ID,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u16)]
-enum Symbol {
+pub enum Symbol {
     RParen = RPAREN_ID,
     LParen = LPAREN_ID,
     RCurly = RCURLY_ID,
@@ -205,9 +206,9 @@ enum Symbol {
     Equals = EQUALS_ID,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u16)]
-enum Operator {
+pub enum Operator {
     RELOP = RELOP_ID,
     ADDOP = ADDOP_ID,
     MULOP = MULOP_ID,
@@ -217,9 +218,22 @@ enum Operator {
     CAST = CAST_ID,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 #[repr(u16)]
-enum Additional {
+pub enum Additional {
     Ident = IDENT_ID,
     Num = NUM_ID,
 }
+
+// KEYWORDS
+pub const INPUT_TOK: Token = Token::Keyword(Keyword::Input);
+pub const OUTPUT_TOK: Token = Token::Keyword(Keyword::Output);
+// OPERATOR
+pub const CAST_TOK: Token = Token::Operator(Operator::CAST);
+// SYMBOLS
+pub const RPAREN_TOK: Token = Token::Symbol(Symbol::RParen);
+pub const LPAREN_TOK: Token = Token::Symbol(Symbol::LParen);
+pub const SEMIC_TOK: Token = Token::Symbol(Symbol::SemiColon);
+// ADDITIONAL
+pub const ID_TOK: Token = Token::Additional(Additional::Ident);
+pub const NUM_TOK: Token = Token::Additional(Additional::Num);

@@ -10,8 +10,8 @@ impl Compiler {
     }
 
     // Compile the source code, output a string
-    pub fn compile(&self) -> String {
-        let mut lexer = Lexer::new(&self.source_code);
+    pub fn compile(self) -> String {
+        let mut lexer = Lexer::new(self.source_code);
 
         todo!()
     }
