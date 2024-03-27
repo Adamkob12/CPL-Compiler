@@ -21,20 +21,8 @@ pub enum RelOp {
 
 pub struct Expression {
     ty: VarType,
-    expr_tree: Box<Expr>,
     code_ref: CodeReference,
     pub code_generated: String,
-}
-
-pub enum Expr {
-    IntLit(i32),
-    FloatLit(f32),
-    Variable { name: Box<str> },
-    Cast(Expression, VarType),
-    Add(Expression, Expression),
-    Sub(Expression, Expression),
-    Mul(Expression, Expression),
-    Div(Expression, Expression),
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -69,7 +57,6 @@ impl Expression {
 
         Self {
             ty: cast_type,
-            expr_tree: Box::new(Expr::Cast(expr_to_cast, cast_type)),
             code_ref: var_name,
             code_generated,
         }
@@ -78,9 +65,6 @@ impl Expression {
     pub fn variable(var_name: Box<str>, var_type: VarType) -> Self {
         Self {
             ty: var_type,
-            expr_tree: Box::new(Expr::Variable {
-                name: var_name.clone(),
-            }),
             code_ref: CodeReference::VarName(var_name),
             code_generated: String::new(),
         }
@@ -89,7 +73,6 @@ impl Expression {
     pub fn int_literal(num: i32) -> Self {
         Self {
             ty: VarType::Int,
-            expr_tree: Box::new(Expr::IntLit(num)),
             code_ref: CodeReference::Literal(format!("{}", num)),
             code_generated: String::new(),
         }
@@ -98,7 +81,6 @@ impl Expression {
     pub fn float_literal(num: f32) -> Self {
         Self {
             ty: VarType::Float,
-            expr_tree: Box::new(Expr::FloatLit(num)),
             code_ref: CodeReference::Literal(format!("{}", num)),
             code_generated: String::new(),
         }
@@ -127,15 +109,8 @@ impl Expression {
             std::mem::take(&mut expr2.code_generated),
             codegen.bin_op(ty, binop, &tmp_var, &expr1.code_ref, &expr2.code_ref)
         );
-        let expr: Expr = match binop {
-            BinaryOp::Add => Expr::Add(expr1, expr2),
-            BinaryOp::Sub => Expr::Sub(expr1, expr2),
-            BinaryOp::Mul => Expr::Mul(expr1, expr2),
-            BinaryOp::Div => Expr::Div(expr1, expr2),
-        };
         Expression {
             ty,
-            expr_tree: Box::new(expr),
             code_ref: tmp_var,
             code_generated,
         }

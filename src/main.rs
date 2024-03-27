@@ -30,7 +30,7 @@ mod tests {
             compile_expression("((2.0 + 2)) * 3 + 1.0"),
         );
         assert_eq!(
-            "ITOR _t0 var2\nRADD _t1 var _t0\nRMLT _t2 var _t1\n ",
+            "ITOR _t0 var2\nRADD _t1 var _t0\nRMLT _t2 var _t1\n",
             compile_expression_with_variables(
                 "var * (var + static_cast<float> (var2))",
                 &[
