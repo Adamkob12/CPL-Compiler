@@ -1,4 +1,4 @@
-use crate::codegen::VarType;
+use crate::{codegen::VarType, lexer::Lexeme, token::Operator};
 
 pub struct Expression {
     ty: VarType,
@@ -14,6 +14,25 @@ pub enum Expr {
     Sub(Expression, Expression),
     Mul(Expression, Expression),
     Div(Expression, Expression),
+}
+
+pub enum BinaryOp {
+    Add,
+    Sub,
+    Mul,
+    Div,
+}
+
+impl BinaryOp {
+    pub fn from_lexeme(l: Lexeme) -> Self {
+        match &*l.0 {
+            "+" => Self::Add,
+            "-" => Self::Sub,
+            "*" => Self::Mul,
+            "/" => Self::Div,
+            _ => panic!("Internal Error: Parsing token Lexeme as Binary Operation failed. \n Expected: +, -, *, / \n Found: {}", l.0),
+        }
+    }
 }
 
 impl Expression {
@@ -42,6 +61,21 @@ impl Expression {
         Self {
             ty: VarType::Float,
             expr_tree: Box::new(Expr::FloatLit(num)),
+        }
+    }
+
+    pub fn binary_op(expr1: Expression, expr2: Expression, binop: BinaryOp) -> Self {
+        let ty = expr1.ty.combine(expr2.ty);
+        let expr: Expr = match binop {
+            BinaryOp::Add => Expr::Add(expr1, expr2),
+            BinaryOp::Sub => Expr::Sub(expr1, expr2),
+            BinaryOp::Mul => Expr::Mul(expr1, expr2),
+            BinaryOp::Div => Expr::Div(expr1, expr2),
+        };
+
+        Expression {
+            ty,
+            expr_tree: Box::new(expr),
         }
     }
 }

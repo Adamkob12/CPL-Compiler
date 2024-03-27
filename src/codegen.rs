@@ -16,6 +16,17 @@ pub enum VarType {
     Int = 1,
 }
 
+impl VarType {
+    // The type of the result of some binary operation. `self` and `other` are the types of the two operands.
+    pub fn combine(self, other: Self) -> Self {
+        use VarType::*;
+        match (self, other) {
+            (Int, Int) => Int,
+            _ => Float,
+        }
+    }
+}
+
 impl CodeGenerator {
     pub fn init() -> Self {
         Self::default()

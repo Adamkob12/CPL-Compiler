@@ -1,10 +1,10 @@
 use crate::{
     codegen::{CodeGenerator, VarType},
-    expression::Expression,
+    expression::{BinaryOp, Expression},
     lexer::Lexeme,
     token::{
-        Keyword, Token, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, NUM_TOK, OUTPUT_TOK, RPAREN_TOK,
-        SEMIC_TOK,
+        Keyword, Token, ADDOP_TOK, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, MULOP_TOK, NUM_TOK,
+        OUTPUT_TOK, RPAREN_TOK, SEMIC_TOK,
     },
 };
 
@@ -27,6 +27,12 @@ impl Parser {
 
     fn lookahead_lexme(&self) -> Option<&Lexeme> {
         self.tokens.get(self.ptr).map(|tok| &tok.0)
+    }
+
+    fn is_lookahead(&self, tok: Token) -> bool {
+        return self
+            .lookahead_tok()
+            .map_or(false, |lookahead| tok == lookahead);
     }
 
     fn advance(&mut self) {
@@ -110,11 +116,23 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Option<Expression> {
-        todo!()
+        let term = self.parse_term()?;
+        if let Some(addop) = self.match_tok(ADDOP_TOK) {
+            let binop = BinaryOp::from_lexeme(addop);
+            return Some(Expression::binary_op(term, self.parse_term()?, binop));
+        }
+
+        return Some(term);
     }
 
     fn parse_term(&mut self) -> Option<Expression> {
-        todo!()
+        let factor = self.parse_factor()?;
+        if let Some(mulop) = self.match_tok(MULOP_TOK) {
+            let binop = BinaryOp::from_lexeme(mulop);
+            return Some(Expression::binary_op(factor, self.parse_term()?, binop));
+        }
+
+        return Some(factor);
     }
 
     fn parse_factor(&mut self) -> Option<Expression> {

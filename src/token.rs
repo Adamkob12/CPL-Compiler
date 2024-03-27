@@ -230,6 +230,8 @@ pub const INPUT_TOK: Token = Token::Keyword(Keyword::Input);
 pub const OUTPUT_TOK: Token = Token::Keyword(Keyword::Output);
 // OPERATOR
 pub const CAST_TOK: Token = Token::Operator(Operator::CAST);
+pub const MULOP_TOK: Token = Token::Operator(Operator::MULOP);
+pub const ADDOP_TOK: Token = Token::Operator(Operator::ADDOP);
 // SYMBOLS
 pub const RPAREN_TOK: Token = Token::Symbol(Symbol::RParen);
 pub const LPAREN_TOK: Token = Token::Symbol(Symbol::LParen);
