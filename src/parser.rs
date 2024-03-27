@@ -1,10 +1,10 @@
 use crate::{
     codegen::{CodeGenerator, VarType},
-    expression::{BinaryOp, Expression},
+    expression::{BinaryOp, BoolExpr, Expression},
     lexer::Lexeme,
     token::{
-        Keyword, Token, ADDOP_TOK, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, MULOP_TOK, NUM_TOK,
-        RPAREN_TOK, SEMIC_TOK,
+        Keyword, Token, ADDOP_TOK, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK,
+        NUM_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK,
     },
 };
 
@@ -139,6 +139,14 @@ impl Parser {
         return Some(term);
     }
 
+    pub fn parse_boolexpr(&mut self) -> Option<BoolExpr> {
+        todo!()
+    }
+
+    pub fn parse_boolterm(&mut self) -> Option<BoolExpr> {
+        todo!()
+    }
+
     fn parse_term(&mut self) -> Option<Expression> {
         let factor = self.parse_factor()?;
         if let Some(mulop) = self.match_tok(MULOP_TOK) {
@@ -152,6 +160,26 @@ impl Parser {
         }
 
         return Some(factor);
+    }
+
+    pub fn parse_boolfactor(&mut self) -> Option<BoolExpr> {
+        let lookahead = self.lookahead_tok()?;
+        match lookahead {
+            NOT_TOK => {
+                self.match_tok(NOT_TOK)?;
+                self.match_tok(LPAREN_TOK)?;
+                let bool_expr = self.parse_boolexpr()?;
+                self.match_tok(RPAREN_TOK)?;
+                return Some(bool_expr);
+            }
+            _ => {}
+        }
+
+        let expr1 = self.parse_expression()?;
+        let relop = self.match_tok(RELOP_TOK)?;
+        let expr2 = self.parse_expression()?;
+
+        todo!()
     }
 
     fn parse_factor(&mut self) -> Option<Expression> {

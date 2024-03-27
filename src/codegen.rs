@@ -1,6 +1,5 @@
-use std::collections::HashMap;
-
 use crate::expression::BinaryOp;
+use std::collections::HashMap;
 
 const INPUT_INT: &str = "IINP";
 const INPUT_FLOAT: &str = "RINP";
@@ -19,8 +18,8 @@ pub struct CodeGenerator {
 
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum VarType {
-    Float = 0,
-    Int = 1,
+    Float,
+    Int,
 }
 
 impl VarType {

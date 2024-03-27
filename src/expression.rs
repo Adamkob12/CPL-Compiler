@@ -3,6 +3,22 @@ use crate::{
     lexer::Lexeme,
 };
 
+pub struct BoolExpr {
+    code_ref: CodeReference,
+    pub code_generated: String,
+    relop: RelOp,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub enum RelOp {
+    Eq,     // ==
+    NotEq,  // !=
+    Less,   // <
+    LessEq, // <=
+    Big,    // >
+    BigEq,  // >=
+}
+
 pub struct Expression {
     ty: VarType,
     expr_tree: Box<Expr>,
@@ -23,10 +39,10 @@ pub enum Expr {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BinaryOp {
-    Add,
-    Sub,
-    Mul,
-    Div,
+    Add, // +
+    Sub, // -
+    Mul, // *
+    Div, // /
 }
 
 impl BinaryOp {
