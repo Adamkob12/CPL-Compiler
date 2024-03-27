@@ -20,6 +20,10 @@ pub struct Lexer {
 }
 
 impl Lexer {
+    pub fn lex_tokens(source_code: String) -> Vec<(Lexeme, Token)> {
+        Lexer::new(source_code).get_all_tokens()
+    }
+
     pub fn new(source_code: String) -> Lexer {
         Lexer {
             lines: source_code.lines().map(|slc| String::from(slc)).collect(),

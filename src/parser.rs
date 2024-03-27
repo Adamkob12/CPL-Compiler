@@ -4,19 +4,28 @@ use crate::{
     lexer::Lexeme,
     token::{
         Keyword, Token, ADDOP_TOK, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, MULOP_TOK, NUM_TOK,
-        OUTPUT_TOK, RPAREN_TOK, SEMIC_TOK,
+        RPAREN_TOK, SEMIC_TOK,
     },
 };
 
 #[derive(Default)]
-struct Parser {
+pub struct Parser {
     generated_code: String,
     tokens: Vec<(Lexeme, Token)>,
     ptr: usize,
-    code_generator: CodeGenerator,
+    pub code_generator: CodeGenerator,
 }
 
 impl Parser {
+    pub fn new(tokens: Vec<(Lexeme, Token)>) -> Self {
+        Parser {
+            generated_code: String::new(),
+            tokens,
+            ptr: 0,
+            code_generator: CodeGenerator::new(),
+        }
+    }
+
     fn lookahead(&self) -> Option<(Lexeme, Token)> {
         self.tokens.get(self.ptr).cloned()
     }
@@ -115,11 +124,16 @@ impl Parser {
         todo!()
     }
 
-    fn parse_expression(&mut self) -> Option<Expression> {
+    pub fn parse_expression(&mut self) -> Option<Expression> {
         let term = self.parse_term()?;
         if let Some(addop) = self.match_tok(ADDOP_TOK) {
             let binop = BinaryOp::from_lexeme(addop);
-            return Some(Expression::binary_op(term, self.parse_term()?, binop));
+            return Some(Expression::binary_op(
+                term,
+                self.parse_expression()?,
+                binop,
+                &mut self.code_generator,
+            ));
         }
 
         return Some(term);
@@ -129,7 +143,12 @@ impl Parser {
         let factor = self.parse_factor()?;
         if let Some(mulop) = self.match_tok(MULOP_TOK) {
             let binop = BinaryOp::from_lexeme(mulop);
-            return Some(Expression::binary_op(factor, self.parse_term()?, binop));
+            return Some(Expression::binary_op(
+                factor,
+                self.parse_term()?,
+                binop,
+                &mut self.code_generator,
+            ));
         }
 
         return Some(factor);
@@ -148,6 +167,7 @@ impl Parser {
                 return self.parse_num_expr();
             }
             LPAREN_TOK => {
+                self.match_tok(LPAREN_TOK)?;
                 let expr = self.parse_expression();
                 self.match_tok(RPAREN_TOK)?;
                 return expr;
@@ -163,15 +183,19 @@ impl Parser {
             cast_type = VarType::Int;
         } else if &*cast_lexeme.0 == "static_cast<float>" {
             cast_type = VarType::Float;
+        } else {
+            return None;
         }
 
         self.match_tok(LPAREN_TOK)?;
         let expr_to_cast = self.parse_expression()?;
         self.match_tok(RPAREN_TOK)?;
 
-        todo!(); // CODEGEN
-
-        return Some(Expression::cast(cast_type, expr_to_cast));
+        return Some(Expression::cast(
+            cast_type,
+            expr_to_cast,
+            &mut self.code_generator,
+        ));
     }
 
     fn parse_id_expr(&mut self) -> Option<Expression> {
@@ -182,15 +206,20 @@ impl Parser {
 
     fn parse_num_expr(&mut self) -> Option<Expression> {
         let raw_num_str = self.match_tok(NUM_TOK)?.0;
+        let raw_num_str = raw_num_str.trim();
         if raw_num_str.contains(".") {
             // Parse as a float
             //  TODO: don't panic, return an error
-            let parsed_num: f32 = raw_num_str.parse().expect("Could not parse float literal.");
+            let parsed_num: f32 = raw_num_str
+                .parse()
+                .unwrap_or_else(|_| panic!("Could not parse float literal: {}.", raw_num_str));
             return Some(Expression::float_literal(parsed_num));
         } else {
             // Parse as an int
             //  TODO: don't panic, return an error
-            let parsed_num: i32 = raw_num_str.parse().expect("Could not parse int literal.");
+            let parsed_num: i32 = raw_num_str
+                .parse()
+                .unwrap_or_else(|_| panic!("Could not parse int literal: {}.", raw_num_str));
             return Some(Expression::int_literal(parsed_num));
         }
     }
