@@ -1,10 +1,16 @@
-use crate::{boolexpr::RelOp, expression::BinaryOp, parser::CodeGenErrorKind};
+use crate::{
+    boolexpr::RelOp,
+    expression::{BinaryOp, Expression},
+    parser::CodeGenErrorKind,
+};
 use std::collections::HashMap;
 
 const INPUT_INT_COMMAND: &str = "IINP";
 const INPUT_FLOAT_COMMAND: &str = "RINP";
 const OUTPUT_INT_COMMAND: &str = "IPRT";
 const OUTPUT_FLOAT_COMMAND: &str = "RPRT";
+const ASSIGN_INT_COMMAND: &str = "IASN";
+const ASSIGN_FLOAT_COMMAND: &str = "RASN";
 
 #[derive(Clone)]
 pub enum CodeReference {
@@ -33,6 +39,13 @@ impl VarType {
         match (self, other) {
             (Int, Int) => Int,
             _ => Float,
+        }
+    }
+
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            VarType::Float => "float",
+            VarType::Int => "int",
         }
     }
 }
@@ -135,17 +148,16 @@ impl CodeGenerator {
         return format!("{} {} {} {}\n", op, a, b, c);
     }
 
-    pub fn gen_output_stmt(
-        &mut self,
-        code_ref: &CodeReference,
-    ) -> Result<String, CodeGenErrorKind> {
+    pub fn gen_output_stmt(&mut self, expr: Expression) -> Result<String, CodeGenErrorKind> {
         let mut output = String::new();
+        // Add the code it took to generate the expression to the output
+        output.push_str(&expr.code_generated);
         // Use the command for the matching type (IPRT / RPRT).
-        match code_ref {
+        match expr.code_ref {
             CodeReference::FloatLiteral(_) => output.push_str(OUTPUT_FLOAT_COMMAND),
             CodeReference::IntLiteral(_) => output.push_str(OUTPUT_INT_COMMAND),
-            CodeReference::VarName(var_name) => {
-                let var_type = self.get_var_type(&var_name)?;
+            CodeReference::VarName(ref var_name) => {
+                let var_type = self.get_var_type(var_name)?;
                 // Use the command for the matching type (INPT / RINP).
                 match var_type {
                     VarType::Int => output.push_str(OUTPUT_INT_COMMAND),
@@ -154,7 +166,7 @@ impl CodeGenerator {
             }
         }
         // The command takes the variable name as the only argument.
-        output.push_str(&format!(" {}\n", code_ref));
+        output.push_str(&format!(" {}\n", expr.code_ref));
         Ok(output)
     }
 
@@ -170,6 +182,33 @@ impl CodeGenerator {
         output.push_str(&format!(" {}\n", var_name));
         Ok(output)
     }
+
+    pub fn gen_assignment_stmt(
+        &mut self,
+        var_name: &str,
+        expr: Expression,
+    ) -> Result<String, CodeGenErrorKind> {
+        let mut output = String::new();
+        let var_type = self.get_var_type(&var_name)?;
+        // Return an error if there is a type mismatch
+        if expr.ty != var_type {
+            return Err(CodeGenErrorKind::type_mismtach(
+                CodeReference::VarName(Box::from(var_name)),
+                var_type,
+                expr.code_ref,
+                expr.ty,
+            ));
+        }
+        // Push all the code it tool to generate the expression before the assignment statement
+        output.push_str(&expr.code_generated);
+        // Use the command for the matching type (IASN / RASN).
+        match var_type {
+            VarType::Int => output.push_str(ASSIGN_INT_COMMAND),
+            VarType::Float => output.push_str(ASSIGN_FLOAT_COMMAND),
+        }
+        output.push_str(&format!(" {} {}\n", var_name, expr.code_ref));
+        return Ok(output);
+    }
 }
 
 impl std::fmt::Display for CodeReference {
@@ -179,5 +218,11 @@ impl std::fmt::Display for CodeReference {
             CodeReference::FloatLiteral(lit) => write!(f, "{}", lit),
             CodeReference::VarName(var_name) => write!(f, "{}", var_name),
         }
+    }
+}
+
+impl std::fmt::Display for VarType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.as_str())
     }
 }

@@ -1,11 +1,19 @@
+use crate::{
+    codegen::{CodeReference, VarType},
+    token::Token,
+};
 use std::fmt::Display;
 
-use crate::token::Token;
-
-trait CompilerError {}
-
 pub enum CodeGenErrorKind {
-    UndeclaredVariable { varname: String },
+    UndeclaredVariable {
+        varname: String,
+    },
+    TypeMismatchInAssignment {
+        expected_ref: CodeReference,
+        expected_type: VarType,
+        found_ref: CodeReference,
+        found_type: VarType,
+    },
 }
 
 pub enum ParsingErrorKind {
@@ -71,6 +79,20 @@ impl CodeGenErrorKind {
             varname: String::from(var_name),
         };
     }
+
+    pub fn type_mismtach(
+        expected_ref: CodeReference,
+        expected_type: VarType,
+        found_ref: CodeReference,
+        found_type: VarType,
+    ) -> Self {
+        CodeGenErrorKind::TypeMismatchInAssignment {
+            expected_ref,
+            expected_type,
+            found_ref,
+            found_type,
+        }
+    }
 }
 
 impl ParsingErrorKind {
@@ -108,6 +130,15 @@ impl Display for CodeGenErrorKind {
         match self {
             CodeGenErrorKind::UndeclaredVariable { varname } => {
                 write!(f, "Undeclared Variable Error\n    Use of Undeclared Variable: {}\n    Fix this error by delacring the variable at the beggining of the program.", varname)
+            }
+            CodeGenErrorKind::TypeMismatchInAssignment {
+                expected_ref,
+                expected_type,
+                found_ref,
+                found_type,
+            } => {
+                write!(f, "Provided Incorrect type in Assignment Error\n    Expected type {} because {} has type {}\n    But found {} with type {}\n    Fix this error by casting {} to {} using static_cast<{}>.",
+                    expected_type, expected_ref, expected_type, found_ref, found_type, found_ref, expected_type, expected_type)
             }
         }
     }

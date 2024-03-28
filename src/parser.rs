@@ -1,12 +1,12 @@
 use crate::{
     boolexpr::*,
-    codegen::{CodeGenerator, VarType},
+    codegen::{CodeGenerator, CodeReference, VarType},
     expression::{BinaryOp, Expression},
     lexer::{LexedToken, Lexeme},
     token::{
-        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, FLOAT_TOK, ID_TOK, INPUT_TOK, INT_TOK,
-        LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK, RPAREN_TOK,
-        SEMIC_TOK,
+        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, EQ_TOK, FLOAT_TOK, ID_TOK, INPUT_TOK,
+        INT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK,
+        RPAREN_TOK, SEMIC_TOK,
     },
 };
 
@@ -96,10 +96,6 @@ impl Parser {
         todo!()
     }
 
-    fn parse_stmt_block(&mut self) -> Result<(), CompilationError> {
-        todo!()
-    }
-
     fn parse_type(&mut self) -> Result<VarType, CompilationError> {
         let lookahead = self.lookahead_tok()?;
         match lookahead {
@@ -157,7 +153,7 @@ impl Parser {
         self.match_tok(SEMIC_TOK)?;
         let generated_code = self
             .code_generator
-            .gen_output_stmt(&expr.code_ref)
+            .gen_output_stmt(expr)
             .map_err(|codegen_err| {
                 CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
             })?;
@@ -277,6 +273,7 @@ impl Parser {
         }
     }
 
+    /// CAST ( expression )
     fn parse_cast_expr(&mut self) -> Result<Expression, CompilationError> {
         let cast_lexeme = self.match_tok(CAST_TOK)?;
         let cast_type: VarType;
@@ -302,6 +299,7 @@ impl Parser {
         ));
     }
 
+    /// ID (variable name)
     fn parse_id_expr(&mut self) -> Result<Expression, CompilationError> {
         let var_name = self.match_tok(ID_TOK)?.0;
         let var_type = self
@@ -313,6 +311,7 @@ impl Parser {
         Ok(Expression::variable(var_name, var_type))
     }
 
+    /// digit+(.digit+)?
     fn parse_num_expr(&mut self) -> Result<Expression, CompilationError> {
         let raw_num_str = self.match_tok(NUM_TOK)?.0;
         let raw_num_str = raw_num_str.trim();
@@ -331,5 +330,50 @@ impl Parser {
                 .unwrap_or_else(|_| panic!("Could not parse int literal: {}.", raw_num_str));
             return Ok(Expression::int_literal(parsed_num));
         }
+    }
+
+    /// ID = expression ;
+    fn parse_assignment_stmt(&mut self) -> Result<(), CompilationError> {
+        let CodeReference::VarName(var_name) = self.parse_id_expr()?.code_ref else {
+            return Err(CompilationError::internal_error(
+                "Number was parsed as variable name".into(),
+            ));
+        };
+        self.match_tok(EQ_TOK)?;
+        let expr = self.parse_expression()?;
+        self.match_tok(SEMIC_TOK)?;
+        self.generated_code.push_str(
+            &self
+                .code_generator
+                .gen_assignment_stmt(&var_name, expr)
+                .map_err(|codegen_err| {
+                    CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+                })?,
+        );
+        Ok(())
+    }
+
+    /// IF ( boolexpr ) stmt ELSE stmt
+    fn parse_if_stmt(&mut self) -> Result<(), CompilationError> {
+        todo!()
+    }
+
+    /// WHILE ( boolexpr ) stmt
+    fn parse_while_stmt(&mut self) -> Result<(), CompilationError> {
+        todo!()
+    }
+
+    /// assignment_stmt | input_stmt | output_stmt | if_stmt | while_stmt | stmt_block
+    fn parse_stmt(&mut self) -> Result<(), CompilationError> {
+        todo!()
+    }
+
+    /// { stmtlist }
+    fn parse_stmt_block(&mut self) -> Result<(), CompilationError> {
+        todo!()
+    }
+
+    fn parse_stmt_list(&mut self) -> Result<(), CompilationError> {
+        todo!()
     }
 }
