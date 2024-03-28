@@ -1,5 +1,5 @@
 use crate::{
-    boolexpr::RelOp,
+    boolexpr::{BoolExpr, RelOp},
     expression::{BinaryOp, Expression},
     parser::CodeGenErrorKind,
 };
@@ -30,6 +30,11 @@ pub struct CodeGenerator {
 pub enum VarType {
     Float,
     Int,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub struct Label {
+    id: usize,
 }
 
 impl VarType {
@@ -78,7 +83,7 @@ impl CodeGenerator {
     // ITOR a b
     // OR
     // RTOI a b
-    pub fn to_stmt(&self, ty: VarType, a: &CodeReference, b: &CodeReference) -> String {
+    pub fn gen_cast_stmt(&self, ty: VarType, a: &CodeReference, b: &CodeReference) -> String {
         match ty {
             VarType::Int => format!("RTOI {} {}\n", a, b),
             VarType::Float => format!("ITOR {} {}\n", a, b),
@@ -208,6 +213,25 @@ impl CodeGenerator {
         }
         output.push_str(&format!(" {} {}\n", var_name, expr.code_ref));
         return Ok(output);
+    }
+
+    pub fn new_label(&mut self) -> Label {
+        self.labels += 1;
+        return Label {
+            id: self.labels - 1,
+        };
+    }
+
+    pub fn gen_label_decleration(&self, label: Label) -> String {
+        format!("L{}:\n", label.id)
+    }
+
+    pub fn gen_jump_to_label(&self, label: Label) -> String {
+        return format!("JMPZ L{}\n", label.id);
+    }
+
+    pub fn gen_jump_if_false(&self, label: Label, boolexpr: BoolExpr) -> String {
+        return format!("JMPZ L{} {}\n", label.id, boolexpr.code_ref);
     }
 }
 

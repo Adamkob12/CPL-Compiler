@@ -4,9 +4,9 @@ use crate::{
     expression::{BinaryOp, Expression},
     lexer::{LexedToken, Lexeme},
     token::{
-        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, EQ_TOK, FLOAT_TOK, ID_TOK, INPUT_TOK,
+        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, EQ_TOK, FLOAT_TOK, ID_TOK, IF_TOK, INPUT_TOK,
         INT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK,
-        RPAREN_TOK, SEMIC_TOK,
+        RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
     },
 };
 
@@ -35,28 +35,22 @@ impl Parser {
         }
     }
 
-    fn lookahead(&self) -> Result<LexedToken, CompilationError> {
+    fn lookahead(&mut self) -> Result<LexedToken, CompilationError> {
         self.tokens
             .get(self.ptr)
             .cloned()
             .ok_or_else(|| CompilationError::unexpected_eof())
+            .inspect(|lexed_token| {
+                self.last_line = lexed_token.line;
+                self.last_column = lexed_token.column
+            })
     }
 
-    fn lookahead_tok(&self) -> Result<Token, CompilationError> {
-        self.tokens
-            .get(self.ptr)
-            .map(|tok| tok.token)
-            .ok_or(CompilationError::unexpected_eof())
+    fn lookahead_tok(&mut self) -> Result<Token, CompilationError> {
+        self.lookahead().map(|lexed_token| lexed_token.token)
     }
 
-    fn lookahead_lexme(&self) -> Result<&Lexeme, CompilationError> {
-        self.tokens
-            .get(self.ptr)
-            .map(|tok| &tok.lexeme)
-            .ok_or(CompilationError::unexpected_eof())
-    }
-
-    fn is_lookahead(&self, tok: Token) -> bool {
+    fn is_lookahead(&mut self, tok: Token) -> bool {
         return self
             .lookahead_tok()
             .map_or(false, |lookahead| tok == lookahead);
@@ -67,8 +61,6 @@ impl Parser {
         (lookahead.token == tok)
             .then(|| {
                 self.ptr += 1;
-                self.last_line = lookahead.line;
-                self.last_column = lookahead.column;
                 lookahead.lexeme
             })
             .ok_or(CompilationError::parsing_error(
@@ -89,10 +81,15 @@ impl Parser {
     fn parse_program(&mut self) -> Result<(), CompilationError> {
         self.parse_declerations()?;
         self.parse_stmt_block()?;
+        self.push_generated_code("HALT");
         Ok(())
     }
 
     fn parse_declerations(&mut self) -> Result<(), CompilationError> {
+        todo!()
+    }
+
+    fn parse_decleration(&mut self) -> Result<(), CompilationError> {
         todo!()
     }
 
@@ -354,27 +351,96 @@ impl Parser {
     }
 
     /// IF ( boolexpr ) stmt ELSE stmt
+    // *boolexpr code* (assume the result is stored in variable r)
+    // JMPZ L1 r
+    // *stmt if boolexpr is true*
+    // JUMP L2
+    // L1: ("else label")
+    // *stmt if boolexpr is false*
+    // L2: ("post label")
+    // *after if statement*
     fn parse_if_stmt(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        self.match_tok(IF_TOK)?; // if
+        self.match_tok(LPAREN_TOK)?; // (
+        let boolexpr = self.parse_boolexpr()?; // boolexpr
+        self.match_tok(RPAREN_TOK)?; // )
+
+        let else_label = self.code_generator.new_label(); // request a new label for "else" from the code generator
+        let post_label = self.code_generator.new_label(); // request a new label for "post" from the code generator
+
+        self.push_generated_code(&boolexpr.code_generated); // boolexpr code
+        self.push_generated_code(&self.code_generator.gen_jump_if_false(else_label, boolexpr)); // Jump to else if false
+        self.parse_stmt()?;
+        self.push_generated_code(&self.code_generator.gen_jump_to_label(post_label)); // Jump to post after stmt if true
+        self.push_generated_code(&self.code_generator.gen_label_decleration(else_label)); // Declare else label
+        self.parse_stmt()?;
+        self.push_generated_code(&self.code_generator.gen_label_decleration(post_label)); // Declare post label
+
+        Ok(())
     }
 
     /// WHILE ( boolexpr ) stmt
+    // *boolexpr code* (assume the result is stored in variable r)
+    // L1:
+    // JMPZ L2 r
+    // *stmt code*
+    // JUMP L1
+    // L2:
     fn parse_while_stmt(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        self.match_tok(WHILE_TOK)?; // while
+        self.match_tok(LPAREN_TOK)?; // (
+        let boolexpr = self.parse_boolexpr()?; // boolexpr
+        self.match_tok(RPAREN_TOK)?; // )
+
+        let loop_label = self.code_generator.new_label(); // request a new label for the loop from the code generator
+        let break_label = self.code_generator.new_label(); // request a new label for breaking from the loop from the code generator
+
+        self.push_generated_code(&boolexpr.code_generated); // code for the boolean expression
+        self.push_generated_code(&self.code_generator.gen_label_decleration(loop_label)); // L1:
+        self.push_generated_code(&self.code_generator.gen_jump_if_false(break_label, boolexpr)); // JMPZ L2 r
+        self.parse_stmt()?;
+        self.push_generated_code(&self.code_generator.gen_jump_to_label(loop_label)); // JUMP L1
+        self.push_generated_code(&self.code_generator.gen_label_decleration(break_label)); // L2:
+
+        Ok(())
     }
 
     /// assignment_stmt | input_stmt | output_stmt | if_stmt | while_stmt | stmt_block
     fn parse_stmt(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        let lookahead_tok = self.lookahead_tok()?;
+        match lookahead_tok {
+            ID_TOK => return self.parse_assignment_stmt(),
+            INPUT_TOK => return self.parse_input_statement(),
+            OUTPUT_TOK => return self.parse_output_statement(),
+            WHILE_TOK => return self.parse_while_stmt(),
+            IF_TOK => return self.parse_if_stmt(),
+            LPAREN_TOK => return self.parse_stmt_block(),
+            _ => {}
+        }
+        return Err(CompilationError::parsing_error(
+            self.last_line,
+            self.last_column,
+            ParsingErrorKind::unexpected_tok(
+                &[ID_TOK, INPUT_TOK, OUTPUT_TOK, IF_TOK, WHILE_TOK, LPAREN_TOK],
+                lookahead_tok,
+            ),
+        ));
     }
 
     /// { stmtlist }
     fn parse_stmt_block(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        self.match_tok(LPAREN_TOK)?;
+        self.parse_stmtlist()?;
+        self.match_tok(RPAREN_TOK)?;
+        Ok(())
     }
 
     /// stmt_list stmt | epsilon
     fn parse_stmtlist(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        if self.is_lookahead(RPAREN_TOK) {
+            return Ok(());
+        }
+        self.parse_stmt()?;
+        return self.parse_stmtlist();
     }
 }

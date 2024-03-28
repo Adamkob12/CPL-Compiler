@@ -33,7 +33,11 @@ impl Expression {
     pub fn cast(cast_type: VarType, expr_to_cast: Expression, codegen: &mut CodeGenerator) -> Self {
         let var_name = codegen.new_tmp_var(cast_type);
         let mut code_generated = expr_to_cast.code_generated;
-        code_generated.push_str(&codegen.to_stmt(cast_type, &var_name, &expr_to_cast.code_ref));
+        code_generated.push_str(&codegen.gen_cast_stmt(
+            cast_type,
+            &var_name,
+            &expr_to_cast.code_ref,
+        ));
 
         Self {
             ty: cast_type,

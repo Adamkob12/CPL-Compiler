@@ -5,7 +5,7 @@ use crate::{
 };
 
 pub struct BoolExpr {
-    code_ref: CodeReference,
+    pub code_ref: CodeReference,
     pub code_generated: String,
 }
 
