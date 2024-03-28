@@ -373,7 +373,8 @@ impl Parser {
         todo!()
     }
 
-    fn parse_stmt_list(&mut self) -> Result<(), CompilationError> {
+    /// stmt_list stmt | epsilon
+    fn parse_stmtlist(&mut self) -> Result<(), CompilationError> {
         todo!()
     }
 }
