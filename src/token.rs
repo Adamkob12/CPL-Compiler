@@ -243,7 +243,10 @@ pub const RELOP_TOK: Token = Token::Operator(Operator::RELOP);
 // SYMBOLS
 pub const RPAREN_TOK: Token = Token::Symbol(Symbol::RParen);
 pub const LPAREN_TOK: Token = Token::Symbol(Symbol::LParen);
+pub const RCURLY_TOK: Token = Token::Symbol(Symbol::RCurly);
+pub const LCURLY_TOK: Token = Token::Symbol(Symbol::LCurly);
 pub const COLON_TOK: Token = Token::Symbol(Symbol::Colon);
+pub const COMMAN_TOK: Token = Token::Symbol(Symbol::Comma);
 pub const SEMIC_TOK: Token = Token::Symbol(Symbol::SemiColon);
 pub const EQ_TOK: Token = Token::Symbol(Symbol::Equals);
 // ADDITIONAL

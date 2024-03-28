@@ -116,10 +116,10 @@ impl Display for ParsingErrorKind {
                     "Unexpected Token Error\n    Expected one of the following tokens: "
                 )?;
                 for tok in expected.into_iter() {
-                    write!(f, "\n\t [{}]", tok)?;
+                    write!(f, "\n\t {}", tok)?;
                 }
                 write!(f, "\n    Found:")?;
-                write!(f, "\n\t [{}]", found)
+                write!(f, "\n\t {}", found)
             }
         }
     }
@@ -167,7 +167,7 @@ impl Display for CompilationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "\n[Line {}, Column {}]:\n{}",
+            "\n[Line {}, Column {}]:\n{}\n",
             self.line, self.column, self.err_kind
         )
     }

@@ -1,0 +1,4 @@
+IASN var2 1
+IMLT _t0 var2 2
+IASN var1 _t0
+HALT

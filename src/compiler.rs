@@ -1,3 +1,5 @@
+use crate::{lexer::Lexer, parser::Parser};
+
 pub struct Compiler {
     source_code: String,
 }
@@ -8,7 +10,14 @@ impl Compiler {
     }
 
     // Compile the source code, output a string
-    pub fn compile(self) -> String {
-        todo!()
+    pub fn compile(self) -> Option<String> {
+        let parser = Parser::new(Lexer::lex_tokens(self.source_code));
+        return parser.parse_program().map_or_else(
+            |err| {
+                eprintln!("{}", err);
+                None
+            },
+            |output| Some(output),
+        );
     }
 }

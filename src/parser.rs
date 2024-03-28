@@ -4,9 +4,9 @@ use crate::{
     expression::{BinaryOp, Expression},
     lexer::{LexedToken, Lexeme},
     token::{
-        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, COLON_TOK, EQ_TOK, FLOAT_TOK, ID_TOK, IF_TOK,
-        INPUT_TOK, INT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK,
-        RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
+        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, COLON_TOK, COMMAN_TOK, EQ_TOK, FLOAT_TOK,
+        ID_TOK, IF_TOK, INPUT_TOK, INT_TOK, LCURLY_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK,
+        OR_TOK, OUTPUT_TOK, RCURLY_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
     },
 };
 
@@ -80,11 +80,11 @@ impl Parser {
     }
 
     /// declerations stmt_block
-    fn parse_program(&mut self) -> Result<(), CompilationError> {
+    pub fn parse_program(mut self) -> Result<String, CompilationError> {
         self.parse_declerations()?;
         self.parse_stmt_block()?;
         self.push_generated_code("HALT");
-        Ok(())
+        Ok(self.generated_code)
     }
 
     /// declerations decleration | epsilon
@@ -98,7 +98,7 @@ impl Parser {
 
     /// idlist : type ;
     fn parse_decleration(&mut self) -> Result<(), CompilationError> {
-        let idlist = self.parse_id_list();
+        let idlist = self.parse_id_list()?;
         self.match_tok(COLON_TOK)?;
         let ty = self.parse_type()?;
         for id in idlist.into_iter().cloned() {
@@ -131,12 +131,13 @@ impl Parser {
     }
 
     /// idlist , ID | ID
-    fn parse_id_list(&mut self) -> Box<[Lexeme]> {
+    fn parse_id_list(&mut self) -> Result<Box<[Lexeme]>, CompilationError> {
         let mut id_list = Vec::new();
-        while let Ok(lexeme) = self.parse_id() {
-            id_list.push(lexeme);
+        id_list.push(self.parse_id()?);
+        while let Ok(_) = self.match_tok(COMMAN_TOK) {
+            id_list.push(self.parse_id()?);
         }
-        id_list.into_boxed_slice()
+        Ok(id_list.into_boxed_slice())
     }
 
     /// INPUT ( ID ) ;
@@ -436,14 +437,14 @@ impl Parser {
             OUTPUT_TOK => return self.parse_output_statement(),
             WHILE_TOK => return self.parse_while_stmt(),
             IF_TOK => return self.parse_if_stmt(),
-            LPAREN_TOK => return self.parse_stmt_block(),
+            LCURLY_TOK => return self.parse_stmt_block(),
             _ => {}
         }
         return Err(CompilationError::parsing_error(
             self.last_line,
             self.last_column,
             ParsingErrorKind::unexpected_tok(
-                &[ID_TOK, INPUT_TOK, OUTPUT_TOK, IF_TOK, WHILE_TOK, LPAREN_TOK],
+                &[ID_TOK, INPUT_TOK, OUTPUT_TOK, IF_TOK, WHILE_TOK, LCURLY_TOK],
                 lookahead_tok,
             ),
         ));
@@ -451,15 +452,15 @@ impl Parser {
 
     /// { stmtlist }
     fn parse_stmt_block(&mut self) -> Result<(), CompilationError> {
-        self.match_tok(LPAREN_TOK)?;
+        self.match_tok(LCURLY_TOK)?;
         self.parse_stmtlist()?;
-        self.match_tok(RPAREN_TOK)?;
+        self.match_tok(RCURLY_TOK)?;
         Ok(())
     }
 
     /// stmt_list stmt | epsilon
     fn parse_stmtlist(&mut self) -> Result<(), CompilationError> {
-        if self.is_lookahead(RPAREN_TOK) {
+        if self.is_lookahead(RCURLY_TOK) {
             return Ok(());
         }
         self.parse_stmt()?;

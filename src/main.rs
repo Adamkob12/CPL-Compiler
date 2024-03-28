@@ -7,7 +7,75 @@ mod lexer;
 mod parser;
 mod token;
 
-fn main() {}
+use std::fs::{read_to_string, write, File};
+use std::path::Path;
+use walkdir::WalkDir;
+
+use crate::compiler::Compiler;
+
+const INPUT_DIRECTORY: &str = "input";
+const OUTPUT_DIRECTORY: &str = "output";
+
+const INPUT_FILE_EXTENSION: &str = "ou";
+const OUTPUT_FILE_EXTENSION: &str = "qud";
+
+fn main() -> Result<(), &'static str> {
+    let input_dir = Path::new(INPUT_DIRECTORY);
+    let output_dir = Path::new(OUTPUT_DIRECTORY);
+
+    // Iterate over all of the files in the input folder
+    for input_file in WalkDir::new(input_dir).into_iter() {
+        if input_file.is_err() {
+            eprintln!("Error: {}", input_file.unwrap_err());
+            continue;
+        }
+
+        // Extract the file
+        let input_file = input_file.unwrap();
+
+        // Skip directories
+        if !input_file.metadata().unwrap().is_file() {
+            continue;
+        }
+
+        let input_file_path = input_file.path();
+
+        let output_file_path = output_dir.join(
+            input_file_path
+                .strip_prefix(INPUT_DIRECTORY)
+                .unwrap()
+                .with_extension(OUTPUT_FILE_EXTENSION),
+        );
+
+        let file_extension = input_file_path.extension();
+
+        if file_extension.is_none() {
+            eprintln!(
+                "Error: File {:?} has no extension, expected <.{}> extension",
+                input_file.path(),
+                INPUT_FILE_EXTENSION
+            );
+            continue;
+        }
+
+        let file_extension = file_extension.unwrap();
+
+        if file_extension == INPUT_FILE_EXTENSION {
+            let input_as_string = read_to_string(input_file_path)
+                .expect("Couldn't parse the input file into a string");
+
+            let compiled = Compiler::init(input_as_string)
+                .compile()
+                .ok_or("Compilation was not successful. No files were generated.")?;
+            File::create(&output_file_path)
+                .expect("Couldn't create the output file")
+                .set_len(0)
+                .expect("Couldn't truncate the output file");
+            write(output_file_path, compiled).expect("Couldn't write to the output file");
+        }
+    }
+    Ok(())
+}
 
 // TESTS
 
