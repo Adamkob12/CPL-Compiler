@@ -53,7 +53,7 @@ impl Expression {
     pub fn int_literal(num: i32) -> Self {
         Self {
             ty: VarType::Int,
-            code_ref: CodeReference::Literal(format!("{}", num)),
+            code_ref: CodeReference::IntLiteral(num),
             code_generated: String::new(),
         }
     }
@@ -61,7 +61,7 @@ impl Expression {
     pub fn float_literal(num: f32) -> Self {
         Self {
             ty: VarType::Float,
-            code_ref: CodeReference::Literal(format!("{}", num)),
+            code_ref: CodeReference::FloatLiteral(num),
             code_generated: String::new(),
         }
     }

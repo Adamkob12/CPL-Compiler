@@ -5,7 +5,8 @@ use crate::{
     lexer::{LexedToken, Lexeme},
     token::{
         Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, FLOAT_TOK, ID_TOK, INPUT_TOK, INT_TOK,
-        LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK,
+        LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK, RPAREN_TOK,
+        SEMIC_TOK,
     },
 };
 
@@ -122,15 +123,12 @@ impl Parser {
 
     fn parse_id_list(&mut self) -> Option<&[Lexeme]> {
         let mut id_list = Vec::new();
-
         while let Ok(lexeme) = self.parse_id() {
             id_list.push(lexeme);
         }
-
         if id_list.is_empty() {
             return None;
         }
-
         Some(Vec::leak(id_list))
     }
 
@@ -140,21 +138,31 @@ impl Parser {
         let var_name = self.parse_id()?.0;
         self.match_tok(RPAREN_TOK)?;
         self.match_tok(SEMIC_TOK)?;
-
         // Generate the code for the input statement
-        let codegen = self
-            .code_generator
-            .gen_input_stmt(var_name)
-            .map_err(|codegen_err| {
-                CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
-            })?;
-        self.push_generated_code(&codegen);
-
+        let generated_code =
+            self.code_generator
+                .gen_input_stmt(&var_name)
+                .map_err(|codegen_err| {
+                    CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+                })?;
+        self.push_generated_code(&generated_code);
         Ok(())
     }
 
-    fn parse_output_statement(&mut self) -> Option<()> {
-        todo!()
+    fn parse_output_statement(&mut self) -> Result<(), CompilationError> {
+        self.match_tok(OUTPUT_TOK)?;
+        self.match_tok(LPAREN_TOK)?;
+        let expr = self.parse_expression()?;
+        self.match_tok(RPAREN_TOK)?;
+        self.match_tok(SEMIC_TOK)?;
+        let generated_code = self
+            .code_generator
+            .gen_output_stmt(&expr.code_ref)
+            .map_err(|codegen_err| {
+                CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+            })?;
+        self.push_generated_code(&generated_code);
+        Ok(())
     }
 
     pub fn parse_expression(&mut self) -> Result<Expression, CompilationError> {

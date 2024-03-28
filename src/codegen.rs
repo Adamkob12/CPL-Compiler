@@ -1,12 +1,15 @@
 use crate::{boolexpr::RelOp, expression::BinaryOp, parser::CodeGenErrorKind};
 use std::collections::HashMap;
 
-const INPUT_INT: &str = "IINP";
-const INPUT_FLOAT: &str = "RINP";
+const INPUT_INT_COMMAND: &str = "IINP";
+const INPUT_FLOAT_COMMAND: &str = "RINP";
+const OUTPUT_INT_COMMAND: &str = "IPRT";
+const OUTPUT_FLOAT_COMMAND: &str = "RPRT";
 
 #[derive(Clone)]
 pub enum CodeReference {
-    Literal(String),
+    IntLiteral(i32),
+    FloatLiteral(f32),
     VarName(Box<str>),
 }
 
@@ -132,18 +135,39 @@ impl CodeGenerator {
         return format!("{} {} {} {}\n", op, a, b, c);
     }
 
-    pub fn gen_input_stmt(&mut self, var_name: Box<str>) -> Result<String, CodeGenErrorKind> {
+    pub fn gen_output_stmt(
+        &mut self,
+        code_ref: &CodeReference,
+    ) -> Result<String, CodeGenErrorKind> {
+        let mut output = String::new();
+        // Use the command for the matching type (IPRT / RPRT).
+        match code_ref {
+            CodeReference::FloatLiteral(_) => output.push_str(OUTPUT_FLOAT_COMMAND),
+            CodeReference::IntLiteral(_) => output.push_str(OUTPUT_INT_COMMAND),
+            CodeReference::VarName(var_name) => {
+                let var_type = self.get_var_type(&var_name)?;
+                // Use the command for the matching type (INPT / RINP).
+                match var_type {
+                    VarType::Int => output.push_str(OUTPUT_INT_COMMAND),
+                    VarType::Float => output.push_str(OUTPUT_FLOAT_COMMAND),
+                }
+            }
+        }
+        // The command takes the variable name as the only argument.
+        output.push_str(&format!(" {}\n", code_ref));
+        Ok(output)
+    }
+
+    pub fn gen_input_stmt(&mut self, var_name: &str) -> Result<String, CodeGenErrorKind> {
         let mut output = String::new();
         let var_type = self.get_var_type(&var_name)?;
         // Use the command for the matching type (INPT / RINP).
         match var_type {
-            VarType::Int => output.push_str(INPUT_INT),
-            VarType::Float => output.push_str(INPUT_FLOAT),
+            VarType::Int => output.push_str(INPUT_INT_COMMAND),
+            VarType::Float => output.push_str(INPUT_FLOAT_COMMAND),
         }
         // The command takes the variable name as the only argument.
-        output.push_str(" ");
-        output.push_str(&var_name);
-        output.push_str("\n");
+        output.push_str(&format!(" {}\n", var_name));
         Ok(output)
     }
 }
@@ -151,7 +175,8 @@ impl CodeGenerator {
 impl std::fmt::Display for CodeReference {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CodeReference::Literal(lit) => write!(f, "{}", lit),
+            CodeReference::IntLiteral(lit) => write!(f, "{}", lit),
+            CodeReference::FloatLiteral(lit) => write!(f, "{}", lit),
             CodeReference::VarName(var_name) => write!(f, "{}", var_name),
         }
     }

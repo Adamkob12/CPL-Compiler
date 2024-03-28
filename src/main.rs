@@ -70,10 +70,13 @@ mod tests {
     #[should_panic(expected = "Unexpected Token")]
     #[test]
     fn test_error_2() {
-        compile_expression(
-            "
-            while",
-        );
+        compile_expression("while");
+    }
+
+    #[should_panic(expected = "Unexpected EOF")]
+    #[test]
+    fn test_error_3() {
+        compile_bool_expression("1 + 1");
     }
 
     fn compilation_test_template(
