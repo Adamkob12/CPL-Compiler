@@ -4,8 +4,8 @@ use crate::{
     expression::{BinaryOp, Expression},
     lexer::{LexedToken, Lexeme},
     token::{
-        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, EQ_TOK, FLOAT_TOK, ID_TOK, IF_TOK, INPUT_TOK,
-        INT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK,
+        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, COLON_TOK, EQ_TOK, FLOAT_TOK, ID_TOK, IF_TOK,
+        INPUT_TOK, INT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK, OR_TOK, OUTPUT_TOK, RELOP_TOK,
         RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
     },
 };
@@ -74,6 +74,7 @@ impl Parser {
         self.generated_code.push_str(code);
     }
 
+    // ID
     fn parse_id(&mut self) -> Result<Lexeme, CompilationError> {
         self.match_tok(ID_TOK)
     }
@@ -86,16 +87,29 @@ impl Parser {
     }
 
     fn parse_declerations(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        if self.is_lookahead(ID_TOK) {
+            self.parse_decleration()?;
+            return self.parse_declerations();
+        }
+        Ok(())
     }
 
+    /// idlist : type ;
     fn parse_decleration(&mut self) -> Result<(), CompilationError> {
-        todo!()
+        let idlist = self.parse_id_list();
+        self.match_tok(COLON_TOK)?;
+        let ty = self.parse_type()?;
+        for id in idlist.into_iter().cloned() {
+            self.code_generator.register_variable(Box::leak(id.0), ty);
+        }
+        self.match_tok(SEMIC_TOK)?;
+        Ok(())
     }
 
+    /// INT | FLOAT
     fn parse_type(&mut self) -> Result<VarType, CompilationError> {
-        let lookahead = self.lookahead_tok()?;
-        match lookahead {
+        let lookahead_tok = self.lookahead_tok()?;
+        match lookahead_tok {
             Token::Keyword(Keyword::Int) => {
                 self.match_tok(INT_TOK)?;
                 return Ok(VarType::Int);
@@ -104,25 +118,23 @@ impl Parser {
                 self.match_tok(FLOAT_TOK)?;
                 return Ok(VarType::Float);
             }
-            tok => {
-                return Err(CompilationError::parsing_error(
-                    self.last_line,
-                    self.last_column,
-                    ParsingErrorKind::unexpected_tok(&[INT_TOK, FLOAT_TOK], tok),
-                ))
-            }
+            _ => {}
         }
+
+        return Err(CompilationError::parsing_error(
+            self.last_line,
+            self.last_column,
+            ParsingErrorKind::unexpected_tok(&[INT_TOK, FLOAT_TOK], lookahead_tok),
+        ));
     }
 
-    fn parse_id_list(&mut self) -> Option<&[Lexeme]> {
+    /// idlist , ID | ID
+    fn parse_id_list(&mut self) -> Box<[Lexeme]> {
         let mut id_list = Vec::new();
         while let Ok(lexeme) = self.parse_id() {
             id_list.push(lexeme);
         }
-        if id_list.is_empty() {
-            return None;
-        }
-        Some(Vec::leak(id_list))
+        id_list.into_boxed_slice()
     }
 
     fn parse_input_statement(&mut self) -> Result<(), CompilationError> {
