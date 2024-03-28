@@ -79,6 +79,7 @@ impl Parser {
         self.match_tok(ID_TOK)
     }
 
+    /// declerations stmt_block
     fn parse_program(&mut self) -> Result<(), CompilationError> {
         self.parse_declerations()?;
         self.parse_stmt_block()?;
@@ -86,6 +87,7 @@ impl Parser {
         Ok(())
     }
 
+    /// declerations decleration | epsilon
     fn parse_declerations(&mut self) -> Result<(), CompilationError> {
         if self.is_lookahead(ID_TOK) {
             self.parse_decleration()?;
@@ -137,6 +139,7 @@ impl Parser {
         id_list.into_boxed_slice()
     }
 
+    /// INPUT ( ID ) ;
     fn parse_input_statement(&mut self) -> Result<(), CompilationError> {
         self.match_tok(INPUT_TOK)?;
         self.match_tok(LPAREN_TOK)?;
@@ -154,6 +157,7 @@ impl Parser {
         Ok(())
     }
 
+    /// OUTPUT ( expression ) ;
     fn parse_output_statement(&mut self) -> Result<(), CompilationError> {
         self.match_tok(OUTPUT_TOK)?;
         self.match_tok(LPAREN_TOK)?;
@@ -170,6 +174,7 @@ impl Parser {
         Ok(())
     }
 
+    /// expression ADDOP term | term
     pub fn parse_expression(&mut self) -> Result<Expression, CompilationError> {
         let term = self.parse_term()?;
         if let Ok(addop) = self.match_tok(ADDOP_TOK) {
@@ -185,6 +190,7 @@ impl Parser {
         return Ok(term);
     }
 
+    /// boolexpr OR boolterm | boolterm
     pub fn parse_boolexpr(&mut self) -> Result<BoolExpr, CompilationError> {
         let term = self.parse_boolterm()?;
         if let Ok(..) = self.match_tok(OR_TOK) {
@@ -198,6 +204,7 @@ impl Parser {
         return Ok(term);
     }
 
+    /// boolterm AND boolfactor | boolfactor
     fn parse_boolterm(&mut self) -> Result<BoolExpr, CompilationError> {
         let factor = self.parse_boolfactor()?;
         if let Ok(..) = self.match_tok(AND_TOK) {
@@ -211,6 +218,7 @@ impl Parser {
         return Ok(factor);
     }
 
+    /// term MULOP factor | factor
     fn parse_term(&mut self) -> Result<Expression, CompilationError> {
         let factor = self.parse_factor()?;
         if let Ok(mulop) = self.match_tok(MULOP_TOK) {
@@ -226,6 +234,7 @@ impl Parser {
         return Ok(factor);
     }
 
+    /// expression RELOP expression | NOT ( boolexpr )
     fn parse_boolfactor(&mut self) -> Result<BoolExpr, CompilationError> {
         let lookahead = self.lookahead_tok()?;
         match lookahead {
@@ -251,6 +260,7 @@ impl Parser {
         ));
     }
 
+    /// ( expression ) | CAST ( expression ) | ID | NUM
     fn parse_factor(&mut self) -> Result<Expression, CompilationError> {
         let lookahead = self.lookahead_tok()?;
         match lookahead {
