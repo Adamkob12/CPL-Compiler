@@ -3,25 +3,9 @@ use crate::{
     lexer::Lexeme,
 };
 
-pub struct BoolExpr {
-    code_ref: CodeReference,
-    pub code_generated: String,
-    relop: RelOp,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq)]
-pub enum RelOp {
-    Eq,     // ==
-    NotEq,  // !=
-    Less,   // <
-    LessEq, // <=
-    Big,    // >
-    BigEq,  // >=
-}
-
 pub struct Expression {
-    ty: VarType,
-    code_ref: CodeReference,
+    pub ty: VarType,
+    pub code_ref: CodeReference,
     pub code_generated: String,
 }
 
@@ -46,13 +30,9 @@ impl BinaryOp {
 }
 
 impl Expression {
-    pub fn cast(
-        cast_type: VarType,
-        mut expr_to_cast: Expression,
-        codegen: &mut CodeGenerator,
-    ) -> Self {
+    pub fn cast(cast_type: VarType, expr_to_cast: Expression, codegen: &mut CodeGenerator) -> Self {
         let var_name = codegen.new_tmp_var(cast_type);
-        let mut code_generated = std::mem::take(&mut expr_to_cast.code_generated);
+        let mut code_generated = expr_to_cast.code_generated;
         code_generated.push_str(&codegen.to_stmt(cast_type, &var_name, &expr_to_cast.code_ref));
 
         Self {
@@ -105,8 +85,8 @@ impl Expression {
         let tmp_var = codegen.new_tmp_var(ty);
         let code_generated = format!(
             "{}{}{}",
-            std::mem::take(&mut expr1.code_generated),
-            std::mem::take(&mut expr2.code_generated),
+            expr1.code_generated,
+            expr2.code_generated,
             codegen.bin_op(ty, binop, &tmp_var, &expr1.code_ref, &expr2.code_ref)
         );
         Expression {

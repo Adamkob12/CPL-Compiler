@@ -1,9 +1,10 @@
-use crate::expression::BinaryOp;
+use crate::{boolexpr::RelOp, expression::BinaryOp};
 use std::collections::HashMap;
 
 const INPUT_INT: &str = "IINP";
 const INPUT_FLOAT: &str = "RINP";
 
+#[derive(Clone)]
 pub enum CodeReference {
     Literal(String),
     VarName(Box<str>),
@@ -78,7 +79,6 @@ impl CodeGenerator {
         c: &CodeReference,
     ) -> String {
         let mut op = String::new();
-
         match ty {
             VarType::Int => {
                 op.push_str("I");
@@ -93,6 +93,38 @@ impl CodeGenerator {
             BinaryOp::Mul => op.push_str("MLT"),
             BinaryOp::Add => op.push_str("ADD"),
         };
+
+        return format!("{} {} {} {}\n", op, a, b, c);
+    }
+
+    /// This function will put into `a`:
+    /// - 0: if b relop c is false
+    /// - >0: if b relop c is true
+    pub fn relop(
+        &self,
+        ty: VarType,
+        relop: RelOp,
+        a: &CodeReference,
+        b: &CodeReference,
+        c: &CodeReference,
+    ) -> String {
+        let mut op = String::new();
+        match ty {
+            VarType::Int => {
+                op.push_str("I");
+            }
+            VarType::Float => {
+                op.push_str("R");
+            }
+        }
+
+        match relop {
+            RelOp::Eq => op.push_str("EQL"),
+            RelOp::NotEq => op.push_str("NQL"),
+            RelOp::Less => op.push_str("LSS"),
+            RelOp::Grt => op.push_str("GRT"),
+            _ => unreachable!(),
+        }
 
         return format!("{} {} {} {}\n", op, a, b, c);
     }

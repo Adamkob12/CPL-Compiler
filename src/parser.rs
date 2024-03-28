@@ -1,10 +1,11 @@
 use crate::{
+    boolexpr::*,
     codegen::{CodeGenerator, VarType},
-    expression::{BinaryOp, BoolExpr, Expression},
+    expression::{BinaryOp, Expression},
     lexer::Lexeme,
     token::{
-        Keyword, Token, ADDOP_TOK, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK,
-        NUM_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK,
+        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, ID_TOK, INPUT_TOK, LPAREN_TOK, MULOP_TOK,
+        NOT_TOK, NUM_TOK, OR_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK,
     },
 };
 
@@ -140,11 +141,29 @@ impl Parser {
     }
 
     pub fn parse_boolexpr(&mut self) -> Option<BoolExpr> {
-        todo!()
+        let term = self.parse_boolterm()?;
+        if let Some(..) = self.match_tok(OR_TOK) {
+            return Some(BoolExpr::or(
+                term,
+                self.parse_boolexpr()?,
+                &mut self.code_generator,
+            ));
+        }
+
+        return Some(term);
     }
 
-    pub fn parse_boolterm(&mut self) -> Option<BoolExpr> {
-        todo!()
+    fn parse_boolterm(&mut self) -> Option<BoolExpr> {
+        let factor = self.parse_boolfactor()?;
+        if let Some(..) = self.match_tok(AND_TOK) {
+            return Some(BoolExpr::and(
+                factor,
+                self.parse_boolterm()?,
+                &mut self.code_generator,
+            ));
+        }
+
+        return Some(factor);
     }
 
     fn parse_term(&mut self) -> Option<Expression> {
@@ -162,7 +181,7 @@ impl Parser {
         return Some(factor);
     }
 
-    pub fn parse_boolfactor(&mut self) -> Option<BoolExpr> {
+    fn parse_boolfactor(&mut self) -> Option<BoolExpr> {
         let lookahead = self.lookahead_tok()?;
         match lookahead {
             NOT_TOK => {
@@ -172,14 +191,19 @@ impl Parser {
                 self.match_tok(RPAREN_TOK)?;
                 return Some(bool_expr);
             }
-            _ => {}
+            _ => (),
         }
 
         let expr1 = self.parse_expression()?;
-        let relop = self.match_tok(RELOP_TOK)?;
+        let relop_lexeme = self.match_tok(RELOP_TOK)?;
         let expr2 = self.parse_expression()?;
 
-        todo!()
+        return Some(BoolExpr::relop(
+            expr1,
+            expr2,
+            RelOp::from_lexeme(relop_lexeme),
+            &mut self.code_generator,
+        ));
     }
 
     fn parse_factor(&mut self) -> Option<Expression> {

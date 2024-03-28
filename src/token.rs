@@ -24,7 +24,7 @@ pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
     (RegexMatch::from_token_id(RELOP_ID), r"^(==|!=|<|>|<=|>=)$"),
     (RegexMatch::from_token_id(ADDOP_ID), r"^(\+|-)$"),
     (RegexMatch::from_token_id(MULOP_ID), r"^(\*|/)$"),
-    (RegexMatch::from_token_id(OR_ID), r"^\|\)$"),
+    (RegexMatch::from_token_id(OR_ID), r"^\|\|$"),
     (RegexMatch::from_token_id(AND_ID), r"^&&$"),
     (RegexMatch::from_token_id(NOT_ID), r"^!$"),
     (
@@ -231,6 +231,8 @@ pub const OUTPUT_TOK: Token = Token::Keyword(Keyword::Output);
 // OPERATOR
 pub const CAST_TOK: Token = Token::Operator(Operator::CAST);
 pub const MULOP_TOK: Token = Token::Operator(Operator::MULOP);
+pub const AND_TOK: Token = Token::Operator(Operator::AND);
+pub const OR_TOK: Token = Token::Operator(Operator::OR);
 pub const ADDOP_TOK: Token = Token::Operator(Operator::ADDOP);
 pub const NOT_TOK: Token = Token::Operator(Operator::NOT);
 pub const RELOP_TOK: Token = Token::Operator(Operator::RELOP);
