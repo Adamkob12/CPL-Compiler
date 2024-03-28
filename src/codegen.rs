@@ -1,4 +1,4 @@
-use crate::{boolexpr::RelOp, expression::BinaryOp};
+use crate::{boolexpr::RelOp, expression::BinaryOp, parser::CodeGenErrorKind};
 use std::collections::HashMap;
 
 const INPUT_INT: &str = "IINP";
@@ -39,8 +39,11 @@ impl CodeGenerator {
         Self::default()
     }
 
-    pub fn get_var_type(&self, var_name: &str) -> Option<VarType> {
-        self.var_types.get(var_name).copied()
+    pub fn get_var_type(&self, var_name: &str) -> Result<VarType, CodeGenErrorKind> {
+        self.var_types
+            .get(var_name)
+            .copied()
+            .ok_or(CodeGenErrorKind::undefined_variable(var_name))
     }
 
     pub fn register_variable(&mut self, var_name: &'static str, ty: VarType) {
@@ -129,7 +132,7 @@ impl CodeGenerator {
         return format!("{} {} {} {}\n", op, a, b, c);
     }
 
-    pub fn gen_input_stmt(&mut self, var_name: Box<str>) -> Option<String> {
+    pub fn gen_input_stmt(&mut self, var_name: Box<str>) -> Result<String, CodeGenErrorKind> {
         let mut output = String::new();
         let var_type = self.get_var_type(&var_name)?;
         // Use the command for the matching type (INPT / RINP).
@@ -141,7 +144,7 @@ impl CodeGenerator {
         output.push_str(" ");
         output.push_str(&var_name);
         output.push_str("\n");
-        Some(output)
+        Ok(output)
     }
 }
 

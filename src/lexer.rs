@@ -9,6 +9,14 @@ impl<'a> Clone for Lexeme {
     }
 }
 
+#[derive(Clone)]
+pub struct LexedToken {
+    pub lexeme: Lexeme,
+    pub token: Token,
+    pub line: usize,
+    pub column: usize,
+}
+
 // A struct that represents the Lexer
 // # ignore the lifetimes, they are just rust boiler-plate.
 pub struct Lexer {
@@ -20,7 +28,7 @@ pub struct Lexer {
 }
 
 impl Lexer {
-    pub fn lex_tokens(source_code: String) -> Vec<(Lexeme, Token)> {
+    pub fn lex_tokens(source_code: String) -> Vec<LexedToken> {
         Lexer::new(source_code).get_all_tokens()
     }
 
@@ -40,7 +48,7 @@ impl Lexer {
     }
 
     // The main function of the Lexer
-    pub fn get_next_token(&mut self) -> Option<(Lexeme, Token)> {
+    pub fn get_next_token(&mut self) -> Option<LexedToken> {
         if self.current_line >= self.lines.len() {
             return None;
         }
@@ -76,7 +84,12 @@ impl Lexer {
                 _ => {}
             },
             RegexMatch::Token(token) if !self.in_comment => {
-                return Some((Lexeme(line.into()), *token))
+                return Some(LexedToken {
+                    lexeme: Lexeme(line.into()),
+                    token: *token,
+                    line: self.current_line,
+                    column: self.current_char,
+                });
             }
             _ => {}
         }
@@ -86,7 +99,7 @@ impl Lexer {
     }
 
     // Lex all the tokens at once
-    pub fn get_all_tokens(mut self) -> Vec<(Lexeme, Token)> {
+    pub fn get_all_tokens(mut self) -> Vec<LexedToken> {
         let mut toks = Vec::new();
         while let Some(tok) = self.get_next_token() {
             toks.push(tok);

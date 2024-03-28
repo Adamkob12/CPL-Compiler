@@ -61,6 +61,21 @@ mod tests {
         );
     }
 
+    #[should_panic(expected = "Undeclared Variable")]
+    #[test]
+    fn test_error_1() {
+        compile_expression("var + var");
+    }
+
+    #[should_panic(expected = "Unexpected Token")]
+    #[test]
+    fn test_error_2() {
+        compile_expression(
+            "
+            while",
+        );
+    }
+
     fn compilation_test_template(
         to_compile: &str,
         expected: &str,
@@ -69,7 +84,7 @@ mod tests {
         let compiled = compiler(to_compile);
         if expected != compiled {
             panic!(
-                "\n\nUnexpected result while compiling: {}.\n\nExpected: \n{}\n\nGot: \n{}",
+                "\n\nUnexpected result while compiling: {}.\n\nExpected: \n{}\n\nFound: \n{}",
                 to_compile, expected, compiled
             );
         }

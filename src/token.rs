@@ -228,6 +228,8 @@ pub enum Additional {
 // KEYWORDS
 pub const INPUT_TOK: Token = Token::Keyword(Keyword::Input);
 pub const OUTPUT_TOK: Token = Token::Keyword(Keyword::Output);
+pub const INT_TOK: Token = Token::Keyword(Keyword::Int);
+pub const FLOAT_TOK: Token = Token::Keyword(Keyword::Float);
 // OPERATOR
 pub const CAST_TOK: Token = Token::Operator(Operator::CAST);
 pub const MULOP_TOK: Token = Token::Operator(Operator::MULOP);
