@@ -1,0 +1,15 @@
+IINP first
+IINP second
+IASN count 0
+L0:
+ILSS _t1 first second
+ISUB _t2 1 _t1
+JMPZ L1 _t2
+ISUB _t3 first second
+IASN first _t3
+IADD _t4 count 1
+IASN count _t4
+JUMP L0
+L1:
+IPRT count
+HALT

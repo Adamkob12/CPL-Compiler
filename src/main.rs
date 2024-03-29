@@ -63,15 +63,23 @@ fn main() -> Result<(), &'static str> {
         if file_extension == INPUT_FILE_EXTENSION {
             let input_as_string = read_to_string(input_file_path)
                 .expect("Couldn't parse the input file into a string");
-
-            let compiled = Compiler::init(input_as_string)
-                .compile()
-                .ok_or("Compilation was not successful. No files were generated.")?;
+            eprintln!("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+            eprintln!("         Compiling {:?}", input_file_path);
+            let compiled =
+                Compiler::init(input_as_string.clone())
+                    .compile()
+                    .ok_or(&*String::leak(format!(
+                        "Could not compile {:?} because of the errors above.",
+                        input_file_path
+                    )))?;
             File::create(&output_file_path)
                 .expect("Couldn't create the output file")
                 .set_len(0)
                 .expect("Couldn't truncate the output file");
             write(output_file_path, compiled).expect("Couldn't write to the output file");
+
+            eprintln!("\n         Compiled {:?} Successfully", input_file_path);
+            eprintln!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
         }
     }
     Ok(())

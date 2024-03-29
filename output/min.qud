@@ -1,0 +1,10 @@
+RINP a
+RINP b
+RLSS _t0 a b
+JMPZ L0 _t0
+RPRT a
+JUMP L1
+L0:
+RPRT b
+L1:
+HALT

@@ -1,0 +1,14 @@
+IASN a 0
+IASN b 1
+L0:
+IGRT _t1 a 1000
+ISUB _t2 1 _t1
+JMPZ L1 _t2
+IPRT a
+IADD _t3 a b
+IASN c _t3
+IASN a b
+IASN b c
+JUMP L0
+L1:
+HALT

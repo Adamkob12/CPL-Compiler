@@ -312,6 +312,10 @@ impl Parser {
         let expr_to_cast = self.parse_expression()?;
         self.match_tok(RPAREN_TOK)?;
 
+        if expr_to_cast.ty == cast_type {
+            return Ok(expr_to_cast);
+        }
+
         return Ok(Expression::cast(
             cast_type,
             expr_to_cast,

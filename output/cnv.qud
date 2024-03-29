@@ -1,0 +1,31 @@
+RINP a
+IINP i
+ITOR _t1 i
+RLSS _t2 a _t1
+ISUB _t3 1 _t2
+JMPZ L0 _t3
+ITOR _t4 i
+RSUB _t5 a _t4
+RASN b _t5
+RPRT b
+JUMP L1
+L0:
+ITOR _t6 i
+RMLT _t7 _t6 a
+RPRT _t7
+L1:
+RADD _t8 3.0 5.8
+RTOI _t9 _t8
+IASN i _t9
+IPRT i
+IADD _t10 3 5
+IASN i _t10
+IPRT i
+IADD _t11 3 5
+ITOR _t12 _t11
+RASN a _t12
+RPRT a
+RADD _t13 3.0 5.0
+RASN a _t13
+RPRT a
+HALT
