@@ -1,4 +1,7 @@
-IASN var2 1
-IMLT _t0 var2 2
-IASN var1 _t0
+IADD _t0 5 9
+IADD _t1 1 _t0
+IADD _t2 1 _t1
+IASN var2 _t2
+IMLT _t3 var2 2
+IASN var1 _t3
 HALT
