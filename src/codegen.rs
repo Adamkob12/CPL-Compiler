@@ -64,7 +64,15 @@ impl CodeGenerator {
         self.var_types
             .get(var_name)
             .copied()
-            .ok_or(CodeGenErrorKind::undefined_variable(var_name))
+            .ok_or(CodeGenErrorKind::undefined_variable(
+                var_name,
+                self.var_types
+                    .clone()
+                    .into_keys()
+                    .map(|s| String::from(s))
+                    .collect::<Vec<_>>()
+                    .into_boxed_slice(),
+            ))
     }
 
     pub fn register_variable(&mut self, var_name: &'static str, ty: VarType) {
@@ -227,7 +235,7 @@ impl CodeGenerator {
     }
 
     pub fn gen_jump_to_label(&self, label: Label) -> String {
-        return format!("JMPZ L{}\n", label.id);
+        return format!("JUMP L{}\n", label.id);
     }
 
     pub fn gen_jump_if_false(&self, label: Label, boolexpr: BoolExpr) -> String {

@@ -7,6 +7,7 @@ use std::fmt::Display;
 pub enum CodeGenErrorKind {
     UndeclaredVariable {
         varname: String,
+        all_variables: Box<[String]>,
     },
     TypeMismatchInAssignment {
         expected_ref: CodeReference,
@@ -74,9 +75,10 @@ impl CompilationError {
 }
 
 impl CodeGenErrorKind {
-    pub fn undefined_variable(var_name: &str) -> Self {
+    pub fn undefined_variable(var_name: &str, all_variables: Box<[String]>) -> Self {
         return Self::UndeclaredVariable {
             varname: String::from(var_name),
+            all_variables,
         };
     }
 
@@ -128,8 +130,16 @@ impl Display for ParsingErrorKind {
 impl Display for CodeGenErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            CodeGenErrorKind::UndeclaredVariable { varname } => {
-                write!(f, "Undeclared Variable Error\n    Use of Undeclared Variable: {}\n    Fix this error by delacring the variable at the beggining of the program.", varname)
+            CodeGenErrorKind::UndeclaredVariable {
+                varname,
+                all_variables,
+            } => {
+                write!(f, "Undeclared Variable Error\n    Use of Undeclared Variable: {}\n    These are all of the declared variables: ", varname)?;
+                // dbg!(all_variables);
+                for var in all_variables.into_iter() {
+                    write!(f, "{}, ", var)?;
+                }
+                write!(f, "\n    Fix this error by delacring the variable at the beginning of the program.")
             }
             CodeGenErrorKind::TypeMismatchInAssignment {
                 expected_ref,

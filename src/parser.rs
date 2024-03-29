@@ -4,9 +4,9 @@ use crate::{
     expression::{BinaryOp, Expression},
     lexer::{LexedToken, Lexeme},
     token::{
-        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, COLON_TOK, COMMAN_TOK, EQ_TOK, FLOAT_TOK,
-        ID_TOK, IF_TOK, INPUT_TOK, INT_TOK, LCURLY_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK, NUM_TOK,
-        OR_TOK, OUTPUT_TOK, RCURLY_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
+        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, COLON_TOK, COMMA_TOK, ELSE_TOK, EQ_TOK,
+        FLOAT_TOK, ID_TOK, IF_TOK, INPUT_TOK, INT_TOK, LCURLY_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK,
+        NUM_TOK, OR_TOK, OUTPUT_TOK, RCURLY_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
     },
 };
 
@@ -30,7 +30,7 @@ impl Parser {
             tokens,
             ptr: 0,
             code_generator: CodeGenerator::new(),
-            last_line: 0,
+            last_line: 1,
             last_column: 0,
         }
     }
@@ -134,7 +134,7 @@ impl Parser {
     fn parse_id_list(&mut self) -> Result<Box<[Lexeme]>, CompilationError> {
         let mut id_list = Vec::new();
         id_list.push(self.parse_id()?);
-        while let Ok(_) = self.match_tok(COMMAN_TOK) {
+        while let Ok(_) = self.match_tok(COMMA_TOK) {
             id_list.push(self.parse_id()?);
         }
         Ok(id_list.into_boxed_slice())
@@ -394,6 +394,7 @@ impl Parser {
         self.push_generated_code(&boolexpr.code_generated); // boolexpr code
         self.push_generated_code(&self.code_generator.gen_jump_if_false(else_label, boolexpr)); // Jump to else if false
         self.parse_stmt()?;
+        self.match_tok(ELSE_TOK)?;
         self.push_generated_code(&self.code_generator.gen_jump_to_label(post_label)); // Jump to post after stmt if true
         self.push_generated_code(&self.code_generator.gen_label_decleration(else_label)); // Declare else label
         self.parse_stmt()?;
@@ -403,8 +404,8 @@ impl Parser {
     }
 
     /// WHILE ( boolexpr ) stmt
-    // *boolexpr code* (assume the result is stored in variable r)
     // L1:
+    // *boolexpr code* (assume the result is stored in variable r)
     // JMPZ L2 r
     // *stmt code*
     // JUMP L1
@@ -418,8 +419,8 @@ impl Parser {
         let loop_label = self.code_generator.new_label(); // request a new label for the loop from the code generator
         let break_label = self.code_generator.new_label(); // request a new label for breaking from the loop from the code generator
 
-        self.push_generated_code(&boolexpr.code_generated); // code for the boolean expression
         self.push_generated_code(&self.code_generator.gen_label_decleration(loop_label)); // L1:
+        self.push_generated_code(&boolexpr.code_generated); // code for the boolean expression
         self.push_generated_code(&self.code_generator.gen_jump_if_false(break_label, boolexpr)); // JMPZ L2 r
         self.parse_stmt()?;
         self.push_generated_code(&self.code_generator.gen_jump_to_label(loop_label)); // JUMP L1

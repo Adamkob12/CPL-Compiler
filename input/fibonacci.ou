@@ -1,0 +1,19 @@
+a, b, c: int;
+counter: float;
+{
+    a = 1;
+    b = 1;
+    while (1 == 1) {
+        c = b;
+        b = b + a;
+        a = c;
+
+        output(b);
+
+        /* "sleep" for a moment*/
+        counter = 0.0001;
+        while (counter < 1) {
+            counter = counter + 0.0001;
+        }
+    }
+}

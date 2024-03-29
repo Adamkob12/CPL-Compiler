@@ -1,0 +1,22 @@
+IASN a 1
+IASN b 1
+L0:
+IEQL _t0 1 1
+JMPZ L1 _t0
+IASN c b
+IADD _t1 b a
+IASN b _t1
+IASN a c
+IPRT b
+RASN counter 0.0001
+L2:
+ITOR _t3 1
+RLSS _t2 counter _t3
+JMPZ L3 _t2
+RADD _t4 counter 0.0001
+RASN counter _t4
+JUMP L2
+L3:
+JUMP L0
+L1:
+HALT

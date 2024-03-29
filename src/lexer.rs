@@ -18,7 +18,6 @@ pub struct LexedToken {
 }
 
 // A struct that represents the Lexer
-// # ignore the lifetimes, they are just rust boiler-plate.
 pub struct Lexer {
     lines: Vec<String>,
     current_line: usize,
@@ -87,7 +86,7 @@ impl Lexer {
                 return Some(LexedToken {
                     lexeme: Lexeme(line.into()),
                     token: *token,
-                    line: self.current_line,
+                    line: self.current_line + 1,
                     column: self.current_char,
                 });
             }
