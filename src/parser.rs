@@ -1,17 +1,11 @@
 use crate::{
     boolexpr::*,
     codegen::{CodeGenerator, CodeReference, VarType},
+    error::*,
     expression::{BinaryOp, Expression},
     lexer::{LexedToken, Lexeme},
-    token::{
-        Keyword, Token, ADDOP_TOK, AND_TOK, CAST_TOK, COLON_TOK, COMMA_TOK, ELSE_TOK, EQ_TOK,
-        FLOAT_TOK, ID_TOK, IF_TOK, INPUT_TOK, INT_TOK, LCURLY_TOK, LPAREN_TOK, MULOP_TOK, NOT_TOK,
-        NUM_TOK, OR_TOK, OUTPUT_TOK, RCURLY_TOK, RELOP_TOK, RPAREN_TOK, SEMIC_TOK, WHILE_TOK,
-    },
+    token::*,
 };
-
-mod error;
-pub use error::*;
 
 #[derive(Default)]
 pub struct Parser {
@@ -21,6 +15,7 @@ pub struct Parser {
     pub code_generator: CodeGenerator,
     last_line: usize,
     last_column: usize,
+    errors: Vec<CompilationError>,
 }
 
 impl Parser {
@@ -32,6 +27,7 @@ impl Parser {
             code_generator: CodeGenerator::new(),
             last_line: 1,
             last_column: 0,
+            errors: Vec::new(),
         }
     }
 
@@ -74,17 +70,32 @@ impl Parser {
         self.generated_code.push_str(code);
     }
 
+    fn cache_error<T>(&mut self, result: Result<T, CompilationError>) {
+        if let Err(error) = result {
+            self.errors.push(error);
+        }
+    }
+
     // ID
     fn parse_id(&mut self) -> Result<Lexeme, CompilationError> {
         self.match_tok(ID_TOK)
     }
 
     /// declerations stmt_block
-    pub fn parse_program(mut self) -> Result<String, CompilationError> {
-        self.parse_declerations()?;
-        self.parse_stmt_block()?;
+    pub fn parse_program(mut self) -> Result<String, Vec<CompilationError>> {
+        let declerations = self.parse_declerations();
+        self.cache_error(declerations);
+
+        let stmt_block = self.parse_stmt_block();
+        self.cache_error(stmt_block);
+
         self.push_generated_code("HALT");
-        Ok(self.generated_code)
+
+        if self.errors.is_empty() {
+            return Ok(self.generated_code);
+        }
+
+        return Err(self.errors);
     }
 
     /// declerations decleration | epsilon
@@ -468,7 +479,28 @@ impl Parser {
         if self.is_lookahead(RCURLY_TOK) {
             return Ok(());
         }
-        self.parse_stmt()?;
+        let stmt = self.parse_stmt();
+        if let Err(error) = stmt {
+            if let Some(ptr_to_next_stmt) = self.try_find_next_stmt() {
+                self.ptr = ptr_to_next_stmt;
+                self.errors.push(error);
+            } else {
+                return Err(error);
+            }
+        }
         return self.parse_stmtlist();
+    }
+
+    fn try_find_next_stmt(&self) -> Option<usize> {
+        let mut ptr = self.ptr;
+        while let Some(next_tok) = self.tokens.get(ptr) {
+            if [ID_TOK, INPUT_TOK, OUTPUT_TOK, IF_TOK, WHILE_TOK, LCURLY_TOK]
+                .contains(&next_tok.token)
+            {
+                return Some(ptr);
+            }
+            ptr += 1;
+        }
+        return None;
     }
 }

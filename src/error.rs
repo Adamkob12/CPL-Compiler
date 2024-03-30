@@ -136,7 +136,10 @@ impl Display for CodeGenErrorKind {
             } => {
                 write!(f, "Undeclared Variable Error\n    Use of Undeclared Variable: {}\n    These are all of the declared variables: ", varname)?;
                 // dbg!(all_variables);
-                for var in all_variables.into_iter() {
+                for var in all_variables
+                    .into_iter()
+                    .filter(|vn| vn.find("_").map_or(true, |i| i != 0))
+                {
                     write!(f, "{}, ", var)?;
                 }
                 write!(f, "\n    Fix this error by delacring the variable at the beginning of the program.")

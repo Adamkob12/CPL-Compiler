@@ -2,6 +2,7 @@
 mod boolexpr;
 mod codegen;
 mod compiler;
+pub mod error;
 mod expression;
 mod lexer;
 mod parser;
@@ -101,12 +102,12 @@ mod tests {
         );
         compilation_test_template(
             "2.0 + 2 * 3 + 1",
-            "IMLT _t0 2 3\nIADD _t1 _t0 1\nITOR _t2 _t1\nRADD _t3 2 _t2\n",
+            "IMLT _t0 2 3\nIADD _t1 _t0 1\nITOR _t2 _t1\nRADD _t3 2.0 _t2\n",
             compile_expression,
         );
         compilation_test_template(
             "((2.0 + 2)) * 3 + 1.0",
-            "ITOR _t0 2\nRADD _t1 2 _t0\nITOR _t2 3\nRMLT _t3 _t1 _t2\nRADD _t4 _t3 1\n",
+            "ITOR _t0 2\nRADD _t1 2.0 _t0\nITOR _t2 3\nRMLT _t3 _t1 _t2\nRADD _t4 _t3 1.0\n",
             compile_expression,
         );
         assert_eq!(

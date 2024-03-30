@@ -1,7 +1,7 @@
 use crate::{
     boolexpr::{BoolExpr, RelOp},
+    error::CodeGenErrorKind,
     expression::{BinaryOp, Expression},
-    parser::CodeGenErrorKind,
 };
 use std::collections::HashMap;
 

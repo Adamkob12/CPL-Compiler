@@ -33,7 +33,7 @@ pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
     ),
     (
         RegexMatch::from_token_id(IDENT_ID),
-        r"^[a-zA-Z][a-zA-Z0-9]*$",
+        r"^[a-zA-Z][_a-zA-Z0-9]*$",
     ),
     (RegexMatch::from_token_id(NUM_ID), r"^[0-9]+(\.[0-9]*)?$"),
     (RegexMatch::NonToken(NonToken::Spaces), r"^[ \t]+$"),
