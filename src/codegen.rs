@@ -41,27 +41,28 @@ impl VarType {
     // The type of the result of some binary operation. `self` and `other` are the types of the two operands.
     pub fn combine(self, other: Self) -> Self {
         use VarType::*;
-        match (self, other) {
+        return match (self, other) {
             (Int, Int) => Int,
             _ => Float,
-        }
+        };
     }
 
     pub fn as_str(&self) -> &'static str {
-        match self {
+        return match self {
             VarType::Float => "float",
             VarType::Int => "int",
-        }
+        };
     }
 }
 
 impl CodeGenerator {
     pub fn new() -> Self {
-        Self::default()
+        return Self::default();
     }
 
     pub fn get_var_type(&self, var_name: &str) -> Result<VarType, CodeGenErrorKind> {
-        self.var_types
+        return self
+            .var_types
             .get(var_name)
             .copied()
             .ok_or(CodeGenErrorKind::undefined_variable(
@@ -72,7 +73,7 @@ impl CodeGenerator {
                     .map(|s| String::from(s))
                     .collect::<Vec<_>>()
                     .into_boxed_slice(),
-            ))
+            ));
     }
 
     pub fn register_variable(&mut self, var_name: &'static str, ty: VarType) {
@@ -83,7 +84,7 @@ impl CodeGenerator {
         let tmp_var_name = String::leak(format!("_t{}", self.tmp_variables));
         self.tmp_variables += 1;
         self.register_variable(tmp_var_name, ty);
-        CodeReference::VarName(Box::from(&*tmp_var_name))
+        return CodeReference::VarName(Box::from(&*tmp_var_name));
     }
 
     // Generated ITOR / RTOI statements
@@ -92,10 +93,10 @@ impl CodeGenerator {
     // OR
     // RTOI a b
     pub fn gen_cast_stmt(&self, ty: VarType, a: &CodeReference, b: &CodeReference) -> String {
-        match ty {
+        return match ty {
             VarType::Int => format!("RTOI {} {}\n", a, b),
             VarType::Float => format!("ITOR {} {}\n", a, b),
-        }
+        };
     }
 
     // Binary operation
@@ -180,7 +181,7 @@ impl CodeGenerator {
         }
         // The command takes the variable name as the only argument.
         output.push_str(&format!(" {}\n", expr.code_ref));
-        Ok(output)
+        return Ok(output);
     }
 
     pub fn gen_input_stmt(&mut self, var_name: &str) -> Result<String, CodeGenErrorKind> {
@@ -193,7 +194,7 @@ impl CodeGenerator {
         }
         // The command takes the variable name as the only argument.
         output.push_str(&format!(" {}\n", var_name));
-        Ok(output)
+        return Ok(output);
     }
 
     pub fn gen_assignment_stmt(
@@ -231,7 +232,7 @@ impl CodeGenerator {
     }
 
     pub fn gen_label_decleration(&self, label: Label) -> String {
-        format!("L{}:\n", label.id)
+        return format!("L{}:\n", label.id);
     }
 
     pub fn gen_jump_to_label(&self, label: Label) -> String {

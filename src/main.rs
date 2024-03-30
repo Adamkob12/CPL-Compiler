@@ -171,17 +171,17 @@ mod tests {
     }
 
     fn compile_expression(expr: &str) -> String {
-        Parser::new(Lexer::lex_tokens(String::from(expr)))
+        return Parser::new(Lexer::lex_tokens(String::from(expr)))
             .parse_expression()
             .unwrap()
-            .code_generated
+            .code_generated;
     }
 
     fn compile_bool_expression(expr: &str) -> String {
-        Parser::new(Lexer::lex_tokens(String::from(expr)))
+        return Parser::new(Lexer::lex_tokens(String::from(expr)))
             .parse_boolexpr()
             .unwrap()
-            .code_generated
+            .code_generated;
     }
 
     fn compile_expression_with_variables(expr: &str, vars: &[(String, VarType)]) -> String {
@@ -191,7 +191,7 @@ mod tests {
                 .code_generator
                 .register_variable(String::leak(var_name.clone()), *var_type)
         }
-        parser.parse_expression().unwrap().code_generated
+        return parser.parse_expression().unwrap().code_generated;
     }
 
     fn compile_bool_expression_with_variables(expr: &str, vars: &[(String, VarType)]) -> String {
@@ -201,6 +201,6 @@ mod tests {
                 .code_generator
                 .register_variable(String::leak(var_name.clone()), *var_type)
         }
-        parser.parse_boolexpr().unwrap().code_generated
+        return parser.parse_boolexpr().unwrap().code_generated;
     }
 }

@@ -13,37 +13,38 @@ pub struct Parser {
     tokens: Vec<LexedToken>,
     ptr: usize,
     pub code_generator: CodeGenerator,
-    last_line: usize,
-    last_column: usize,
-    errors: Vec<CompilationError>,
+    last_seen_line: usize,
+    last_seen_column: usize,
+    errors_found: Vec<CompilationError>,
 }
 
 impl Parser {
     pub fn new(tokens: Vec<LexedToken>) -> Self {
-        Parser {
+        return Parser {
             generated_code: String::new(),
             tokens,
             ptr: 0,
             code_generator: CodeGenerator::new(),
-            last_line: 1,
-            last_column: 0,
-            errors: Vec::new(),
-        }
+            last_seen_line: 1,
+            last_seen_column: 0,
+            errors_found: Vec::new(),
+        };
     }
 
     fn lookahead(&mut self) -> Result<LexedToken, CompilationError> {
-        self.tokens
+        return self
+            .tokens
             .get(self.ptr)
             .cloned()
             .ok_or_else(|| CompilationError::unexpected_eof())
             .inspect(|lexed_token| {
-                self.last_line = lexed_token.line;
-                self.last_column = lexed_token.column
-            })
+                self.last_seen_line = lexed_token.line;
+                self.last_seen_column = lexed_token.column
+            });
     }
 
     fn lookahead_tok(&mut self) -> Result<Token, CompilationError> {
-        self.lookahead().map(|lexed_token| lexed_token.token)
+        return self.lookahead().map(|lexed_token| lexed_token.token);
     }
 
     fn is_lookahead(&mut self, tok: Token) -> bool {
@@ -54,16 +55,16 @@ impl Parser {
 
     fn match_tok(&mut self, tok: Token) -> Result<Lexeme, CompilationError> {
         let lookahead = self.lookahead()?;
-        (lookahead.token == tok)
+        return (lookahead.token == tok)
             .then(|| {
                 self.ptr += 1;
                 lookahead.lexeme
             })
             .ok_or(CompilationError::parsing_error(
-                self.last_line,
-                self.last_column,
+                self.last_seen_line,
+                self.last_seen_column,
                 ParsingErrorKind::unexpected_tok(&[tok], lookahead.token),
-            ))
+            ));
     }
 
     fn push_generated_code(&mut self, code: &str) {
@@ -72,13 +73,13 @@ impl Parser {
 
     fn cache_error<T>(&mut self, result: Result<T, CompilationError>) {
         if let Err(error) = result {
-            self.errors.push(error);
+            self.errors_found.push(error);
         }
     }
 
     // ID
     fn parse_id(&mut self) -> Result<Lexeme, CompilationError> {
-        self.match_tok(ID_TOK)
+        return self.match_tok(ID_TOK);
     }
 
     /// declerations stmt_block
@@ -91,11 +92,11 @@ impl Parser {
 
         self.push_generated_code("HALT");
 
-        if self.errors.is_empty() {
+        if self.errors_found.is_empty() {
             return Ok(self.generated_code);
+        } else {
+            return Err(self.errors_found);
         }
-
-        return Err(self.errors);
     }
 
     /// declerations decleration | epsilon
@@ -104,7 +105,7 @@ impl Parser {
             self.parse_decleration()?;
             return self.parse_declerations();
         }
-        Ok(())
+        return Ok(());
     }
 
     /// idlist : type ;
@@ -116,7 +117,7 @@ impl Parser {
             self.code_generator.register_variable(Box::leak(id.0), ty);
         }
         self.match_tok(SEMIC_TOK)?;
-        Ok(())
+        return Ok(());
     }
 
     /// INT | FLOAT
@@ -135,8 +136,8 @@ impl Parser {
         }
 
         return Err(CompilationError::parsing_error(
-            self.last_line,
-            self.last_column,
+            self.last_seen_line,
+            self.last_seen_column,
             ParsingErrorKind::unexpected_tok(&[INT_TOK, FLOAT_TOK], lookahead_tok),
         ));
     }
@@ -148,7 +149,7 @@ impl Parser {
         while let Ok(_) = self.match_tok(COMMA_TOK) {
             id_list.push(self.parse_id()?);
         }
-        Ok(id_list.into_boxed_slice())
+        return Ok(id_list.into_boxed_slice());
     }
 
     /// INPUT ( ID ) ;
@@ -163,10 +164,14 @@ impl Parser {
             self.code_generator
                 .gen_input_stmt(&var_name)
                 .map_err(|codegen_err| {
-                    CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+                    CompilationError::codegen_error(
+                        self.last_seen_line,
+                        self.last_seen_column,
+                        codegen_err,
+                    )
                 })?;
         self.push_generated_code(&generated_code);
-        Ok(())
+        return Ok(());
     }
 
     /// OUTPUT ( expression ) ;
@@ -180,10 +185,14 @@ impl Parser {
             .code_generator
             .gen_output_stmt(expr)
             .map_err(|codegen_err| {
-                CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+                CompilationError::codegen_error(
+                    self.last_seen_line,
+                    self.last_seen_column,
+                    codegen_err,
+                )
             })?;
         self.push_generated_code(&generated_code);
-        Ok(())
+        return Ok(());
     }
 
     /// expression ADDOP term | term
@@ -293,8 +302,8 @@ impl Parser {
             }
             lookahead_tok => {
                 return Err(CompilationError::parsing_error(
-                    self.last_line,
-                    self.last_column,
+                    self.last_seen_line,
+                    self.last_seen_column,
                     ParsingErrorKind::unexpected_tok(
                         &[CAST_TOK, ID_TOK, NUM_TOK, LPAREN_TOK],
                         lookahead_tok,
@@ -314,7 +323,7 @@ impl Parser {
             lexeme => {
                 return Err(CompilationError::internal_error(format!(
                     "Lexer mistakeingly parsed {} as CAST token. Line {} Column {}",
-                    lexeme, self.last_line, self.last_column
+                    lexeme, self.last_seen_line, self.last_seen_column
                 )))
             }
         }
@@ -341,9 +350,13 @@ impl Parser {
             .code_generator
             .get_var_type(&var_name)
             .map_err(|codegen_err| {
-                CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+                CompilationError::codegen_error(
+                    self.last_seen_line,
+                    self.last_seen_column,
+                    codegen_err,
+                )
             })?;
-        Ok(Expression::variable(var_name, var_type))
+        return Ok(Expression::variable(var_name, var_type));
     }
 
     /// digit+(.digit+)?
@@ -382,10 +395,14 @@ impl Parser {
                 .code_generator
                 .gen_assignment_stmt(&var_name, expr)
                 .map_err(|codegen_err| {
-                    CompilationError::codegen_error(self.last_line, self.last_column, codegen_err)
+                    CompilationError::codegen_error(
+                        self.last_seen_line,
+                        self.last_seen_column,
+                        codegen_err,
+                    )
                 })?,
         );
-        Ok(())
+        return Ok(());
     }
 
     /// IF ( boolexpr ) stmt ELSE stmt
@@ -415,7 +432,7 @@ impl Parser {
         self.parse_stmt()?;
         self.push_generated_code(&self.code_generator.gen_label_decleration(post_label)); // Declare post label
 
-        Ok(())
+        return Ok(());
     }
 
     /// WHILE ( boolexpr ) stmt
@@ -441,7 +458,7 @@ impl Parser {
         self.push_generated_code(&self.code_generator.gen_jump_to_label(loop_label)); // JUMP L1
         self.push_generated_code(&self.code_generator.gen_label_decleration(break_label)); // L2:
 
-        Ok(())
+        return Ok(());
     }
 
     /// assignment_stmt | input_stmt | output_stmt | if_stmt | while_stmt | stmt_block
@@ -457,8 +474,8 @@ impl Parser {
             _ => {}
         }
         return Err(CompilationError::parsing_error(
-            self.last_line,
-            self.last_column,
+            self.last_seen_line,
+            self.last_seen_column,
             ParsingErrorKind::unexpected_tok(
                 &[ID_TOK, INPUT_TOK, OUTPUT_TOK, IF_TOK, WHILE_TOK, LCURLY_TOK],
                 lookahead_tok,
@@ -471,7 +488,7 @@ impl Parser {
         self.match_tok(LCURLY_TOK)?;
         self.parse_stmtlist()?;
         self.match_tok(RCURLY_TOK)?;
-        Ok(())
+        return Ok(());
     }
 
     /// stmt_list stmt | epsilon
@@ -483,7 +500,7 @@ impl Parser {
         if let Err(error) = stmt {
             if let Some(ptr_to_next_stmt) = self.try_find_next_stmt() {
                 self.ptr = ptr_to_next_stmt;
-                self.errors.push(error);
+                self.errors_found.push(error);
             } else {
                 return Err(error);
             }

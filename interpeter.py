@@ -14,11 +14,11 @@ if PY2:
 
 COMMENTS_RE = re.compile(r"/\*(?:.|\n)*?\*/|#.*")
 OP_RE = re.compile(r"^[A-Z]+?$")
-LABEL_DEF_RE = re.compile(r"^L[0-9]*:$")
+LABEL_DEF_RE = re.compile(r"^[a-zA-Z]+[a-zA-Z0-9_]*:$")
 ID_RE = re.compile(r"^[a-z_]+[a-z0-9_]*$")
 INT_RE = re.compile(r"^[0-9]+$")
 FLOAT_RE = re.compile(r"^[0-9]+\.[0-9]*$")
-LABEL_RE = re.compile(r"^L+[a-z0-9_]*$")
+LABEL_RE = re.compile(r"^[a-zA-Z]+[a-zA-Z0-9_]*$")
 
 class QuadError(Exception):
     def __init__(self, lineno, msg):

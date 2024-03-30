@@ -28,17 +28,17 @@ pub struct Lexer {
 
 impl Lexer {
     pub fn lex_tokens(source_code: String) -> Vec<LexedToken> {
-        Lexer::new(source_code).get_all_tokens()
+        return Lexer::new(source_code).get_all_tokens();
     }
 
     pub fn new(source_code: String) -> Lexer {
-        Lexer {
+        return Lexer {
             lines: source_code.lines().map(|slc| String::from(slc)).collect(),
             current_line: 0,
             current_char: 0,
             in_comment: false,
             regex_set: build_regex_set(),
-        }
+        };
     }
 
     fn new_line(&mut self) {
@@ -103,6 +103,6 @@ impl Lexer {
         while let Some(tok) = self.get_next_token() {
             toks.push(tok);
         }
-        toks
+        return toks;
     }
 }

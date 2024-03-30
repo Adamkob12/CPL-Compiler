@@ -21,7 +21,7 @@ pub enum RelOp {
 
 impl RelOp {
     pub fn from_lexeme(l: Lexeme) -> Self {
-        match &*l.0 {
+        return match &*l.0 {
             "==" => Self::Eq,
             "!=" => Self::NotEq,
             "<" => Self::Less,
@@ -29,7 +29,7 @@ impl RelOp {
             "<=" => Self::LessEq,
             ">=" => Self::GrtEq,
             l => panic!("Interal Error: Could not parse lexeme: {l} as RelOp"),
-        }
+        };
     }
 }
 

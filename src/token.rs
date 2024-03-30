@@ -1,7 +1,7 @@
 #![allow(private_interfaces)]
 
 use std::fmt::Display;
-pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
+pub const REGEX_TABLE: &[(RegexMatch, &str)] = &[
     (RegexMatch::from_token_id(BREAK_ID), r"^break$"),
     (RegexMatch::from_token_id(CASE_ID), r"^case$"),
     (RegexMatch::from_token_id(DEFAULT_ID), r"^default$"),
@@ -50,8 +50,8 @@ pub const REGEX_TABLE: &'static [(RegexMatch, &str)] = &[
 ];
 
 pub fn build_regex_set() -> regex::RegexSet {
-    regex::RegexSet::new(REGEX_TABLE.iter().map(|(_, regex)| regex))
-        .expect("Failed to build regex set.")
+    return regex::RegexSet::new(REGEX_TABLE.iter().map(|(_, regex)| regex))
+        .expect("Failed to build regex set.");
 }
 
 const UNRECOGNIZED_TOKEN_ERR: &str = "Token Error: unrecognized token.";
@@ -67,15 +67,15 @@ const STARTING_TOKEN_ID: TokenID = 10;
 
 impl RegexMatch {
     const fn from_token_id(id: TokenID) -> Self {
-        RegexMatch::Token(TOKEN_TABLE[(id - STARTING_TOKEN_ID) as usize])
+        return RegexMatch::Token(TOKEN_TABLE[(id - STARTING_TOKEN_ID) as usize]);
     }
 
     pub fn _get_id(&self) -> TokenID {
-        match self {
+        return match self {
             RegexMatch::NonToken(a) if matches!(a, NonToken::Spaces) => 0,
             RegexMatch::Token(token) => token.id(),
             _ => 1,
-        }
+        };
     }
 }
 
@@ -97,23 +97,23 @@ pub enum Token {
 
 impl Token {
     pub fn id(&self) -> TokenID {
-        match self {
+        return match self {
             Token::Keyword(keyword) => *keyword as TokenID,
             Token::Symbol(symbol) => *symbol as TokenID,
             Token::Operator(operator) => *operator as TokenID,
             Token::Additional(additional) => *additional as TokenID,
-        }
+        };
     }
 }
 
 impl Display for Token {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
+        return match self {
             Token::Keyword(keyword) => write!(f, "{:?} (Keyword)", keyword),
             Token::Symbol(symbol) => write!(f, "{:?} (Symbol)", symbol),
             Token::Operator(operator) => write!(f, "{:?} (Operator)", operator),
             Token::Additional(additional) => write!(f, "{:?}", additional),
-        }
+        };
     }
 }
 

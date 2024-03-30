@@ -6,7 +6,7 @@ pub struct Compiler {
 
 impl Compiler {
     pub fn init(source_code: String) -> Compiler {
-        Compiler { source_code }
+        return Compiler { source_code };
     }
 
     // Compile the source code, output a string

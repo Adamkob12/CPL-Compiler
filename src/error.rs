@@ -88,12 +88,12 @@ impl CodeGenErrorKind {
         found_ref: CodeReference,
         found_type: VarType,
     ) -> Self {
-        CodeGenErrorKind::TypeMismatchInAssignment {
+        return CodeGenErrorKind::TypeMismatchInAssignment {
             expected_ref,
             expected_type,
             found_ref,
             found_type,
-        }
+        };
     }
 }
 
@@ -108,7 +108,7 @@ impl ParsingErrorKind {
 
 impl Display for ParsingErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
+        return match self {
             ParsingErrorKind::UnexpectedEOF => {
                 write!(f, "Unexpected EOF Error\n    Unexpected reach of EOF")
             }
@@ -123,13 +123,13 @@ impl Display for ParsingErrorKind {
                 write!(f, "\n    Found:")?;
                 write!(f, "\n\t {}", found)
             }
-        }
+        };
     }
 }
 
 impl Display for CodeGenErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
+        return match self {
             CodeGenErrorKind::UndeclaredVariable {
                 varname,
                 all_variables,
@@ -153,26 +153,26 @@ impl Display for CodeGenErrorKind {
                 write!(f, "Provided Incorrect type in Assignment Error\n    Expected type {} because {} has type {}\n    But found {} with type {}\n    Fix this error by casting {} to {} using static_cast<{}>.",
                     expected_type, expected_ref, expected_type, found_ref, found_type, found_ref, expected_type, expected_type)
             }
-        }
+        };
     }
 }
 
 impl Display for LexingErrorKind {
     fn fmt(&self, _f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Ok(())
+        todo!()
     }
 }
 
 impl Display for CompilationErrorKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
+        return match self {
             Self::InternalError(err_desc) => write!(f, "  Internal error: {}", err_desc),
             Self::ParsingError(parsing_err) => write!(f, "  Parsing Error: {}", parsing_err),
             Self::LexingError(lexing_err) => write!(f, "  Lexing Error: {}", lexing_err),
             Self::CodeGenError(codegen_err) => {
                 write!(f, "  Code Generation Error: {}", codegen_err)
             }
-        }
+        };
     }
 }
 
@@ -190,7 +190,7 @@ macro_rules! impl_debug_from_display {
     ($name:ty) => {
         impl std::fmt::Debug for $name {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-                std::fmt::Display::fmt(self, f)
+                return std::fmt::Display::fmt(self, f);
             }
         }
     };

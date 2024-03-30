@@ -19,13 +19,13 @@ pub enum BinaryOp {
 
 impl BinaryOp {
     pub fn from_lexeme(l: Lexeme) -> Self {
-        match &*l.0 {
+        return match &*l.0 {
             "+" => Self::Add,
             "-" => Self::Sub,
             "*" => Self::Mul,
             "/" => Self::Div,
             _ => panic!("Internal Error: Parsing token Lexeme as Binary Operation failed. \n Expected: +, -, *, / \n Found: {}", l.0),
-        }
+        };
     }
 }
 
@@ -39,35 +39,35 @@ impl Expression {
             &expr_to_cast.code_ref,
         ));
 
-        Self {
+        return Self {
             ty: cast_type,
             code_ref: var_name,
             code_generated,
-        }
+        };
     }
 
     pub fn variable(var_name: Box<str>, var_type: VarType) -> Self {
-        Self {
+        return Self {
             ty: var_type,
             code_ref: CodeReference::VarName(var_name),
             code_generated: String::new(),
-        }
+        };
     }
 
     pub fn int_literal(num: i32) -> Self {
-        Self {
+        return Self {
             ty: VarType::Int,
             code_ref: CodeReference::IntLiteral(num),
             code_generated: String::new(),
-        }
+        };
     }
 
     pub fn float_literal(num: f32) -> Self {
-        Self {
+        return Self {
             ty: VarType::Float,
             code_ref: CodeReference::FloatLiteral(num),
             code_generated: String::new(),
-        }
+        };
     }
 
     pub fn binary_op(
@@ -93,10 +93,10 @@ impl Expression {
             expr2.code_generated,
             codegen.bin_op(ty, binop, &tmp_var, &expr1.code_ref, &expr2.code_ref)
         );
-        Expression {
+        return Expression {
             ty,
             code_ref: tmp_var,
             code_generated,
-        }
+        };
     }
 }
