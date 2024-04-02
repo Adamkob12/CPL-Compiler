@@ -4,11 +4,13 @@ use crate::{
     lexer::Lexeme,
 };
 
+/// Struct representing a boolean expression
 pub struct BoolExpr {
     pub code_ref: CodeReference,
     pub code_generated: String,
 }
 
+/// Relative Operation between two Expressions
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum RelOp {
     Eq,     // ==
@@ -34,7 +36,8 @@ impl RelOp {
 }
 
 impl BoolExpr {
-    #[inline]
+    /// Convert the boolean expression into a regular expression.
+    /// For example, [1 < 2] will be seen as a integer expression, 0 or 1.
     pub fn as_expression(self) -> Expression {
         return Expression {
             ty: VarType::Int,
@@ -43,7 +46,7 @@ impl BoolExpr {
         };
     }
 
-    #[inline]
+    /// Convert an expression to a boolean expression, 0 is false, 1 is true.
     pub fn from_expression(expr: Expression) -> BoolExpr {
         return BoolExpr {
             code_ref: expr.code_ref,
@@ -51,6 +54,7 @@ impl BoolExpr {
         };
     }
 
+    /// `Not` operation of a boolean expression.
     pub fn not(bool_expr: BoolExpr, codegen: &mut CodeGenerator) -> BoolExpr {
         // A boolean expression is always an Int with value 0 or 1
         // To get Not(bool) we do 1 - bool
@@ -64,6 +68,7 @@ impl BoolExpr {
         ));
     }
 
+    /// `And` operation of two boolean expressions.
     pub fn and(
         bool_expr1: BoolExpr,
         bool_expr2: BoolExpr,
@@ -83,6 +88,7 @@ impl BoolExpr {
         ));
     }
 
+    /// `Or` operation of two boolean expressions.
     pub fn or(bool_expr1: BoolExpr, bool_expr2: BoolExpr, codegen: &mut CodeGenerator) -> BoolExpr {
         // A boolean expression is always an Int with value 0 or 1
         // To get a OR b we do: not(not(a) AND not(b)) = 1 - ((1 - a) * (1 - b))
@@ -100,6 +106,7 @@ impl BoolExpr {
         );
     }
 
+    /// `ReLop` operation of two expressions.
     pub fn relop(
         mut expr1: Expression,
         mut expr2: Expression,

@@ -77,7 +77,7 @@ impl Lexer {
                     self.in_comment = false;
                 }
                 NonToken::Error(err) if !self.in_comment => {
-                    eprintln!("Error at line {}: {}", self.current_line, err);
+                    eprintln!("Lexing Error at line {}: {}", self.current_line, err);
                     self.new_line();
                 }
                 _ => {}

@@ -4,6 +4,7 @@ use crate::{
 };
 use std::fmt::Display;
 
+/// An error that has occured during the code generation process
 pub enum CodeGenErrorKind {
     UndeclaredVariable {
         varname: String,
@@ -17,6 +18,7 @@ pub enum CodeGenErrorKind {
     },
 }
 
+/// An error that has occured during the parsing process
 pub enum ParsingErrorKind {
     UnexpectedEOF,
     UnexpectedToken {
@@ -25,8 +27,10 @@ pub enum ParsingErrorKind {
     },
 }
 
+/// An error that has occured during the Lexing process
 pub enum LexingErrorKind {}
 
+/// An instance of a compilation error
 pub struct CompilationError {
     line: usize,
     column: usize,
@@ -67,8 +71,8 @@ impl CompilationError {
 
     pub fn unexpected_eof() -> Self {
         return Self {
-            line: 0,
-            column: 0,
+            line: 999,
+            column: 999,
             err_kind: CompilationErrorKind::ParsingError(ParsingErrorKind::UnexpectedEOF),
         };
     }
@@ -135,7 +139,6 @@ impl Display for CodeGenErrorKind {
                 all_variables,
             } => {
                 write!(f, "Undeclared Variable Error\n    Use of Undeclared Variable: {}\n    These are all of the declared variables: ", varname)?;
-                // dbg!(all_variables);
                 for var in all_variables
                     .into_iter()
                     .filter(|vn| vn.find("_").map_or(true, |i| i != 0))

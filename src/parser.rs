@@ -31,6 +31,7 @@ impl Parser {
         };
     }
 
+    /// Get the lookahead LexedToken
     fn lookahead(&mut self) -> Result<LexedToken, CompilationError> {
         return self
             .tokens
@@ -43,16 +44,19 @@ impl Parser {
             });
     }
 
+    /// Get the lookahead token
     fn lookahead_tok(&mut self) -> Result<Token, CompilationError> {
         return self.lookahead().map(|lexed_token| lexed_token.token);
     }
 
+    /// Return true if the lookahead token matches the paramter
     fn is_lookahead(&mut self, tok: Token) -> bool {
         return self
             .lookahead_tok()
             .map_or(false, |lookahead| tok == lookahead);
     }
 
+    /// Match the token, if the next token doesn't match, return a Parsing Error.
     fn match_tok(&mut self, tok: Token) -> Result<Lexeme, CompilationError> {
         let lookahead = self.lookahead()?;
         return (lookahead.token == tok)
@@ -71,6 +75,7 @@ impl Parser {
         self.generated_code.push_str(code);
     }
 
+    /// Cache an error, we don't want to stop compilation after the first error, so we save all of them.
     fn cache_error<T>(&mut self, result: Result<T, CompilationError>) {
         if let Err(error) = result {
             self.errors_found.push(error);
@@ -79,7 +84,7 @@ impl Parser {
 
     // ID
     fn parse_id(&mut self) -> Result<Lexeme, CompilationError> {
-        return self.match_tok(ID_TOK);
+        return self.match_tok(ID_TOK); // ID
     }
 
     /// declerations stmt_block
@@ -111,12 +116,12 @@ impl Parser {
     /// idlist : type ;
     fn parse_decleration(&mut self) -> Result<(), CompilationError> {
         let idlist = self.parse_id_list()?;
-        self.match_tok(COLON_TOK)?;
+        self.match_tok(COLON_TOK)?; // :
         let ty = self.parse_type()?;
         for id in idlist.into_iter().cloned() {
             self.code_generator.register_variable(Box::leak(id.0), ty);
         }
-        self.match_tok(SEMIC_TOK)?;
+        self.match_tok(SEMIC_TOK)?; // ;
         return Ok(());
     }
 
@@ -125,11 +130,11 @@ impl Parser {
         let lookahead_tok = self.lookahead_tok()?;
         match lookahead_tok {
             Token::Keyword(Keyword::Int) => {
-                self.match_tok(INT_TOK)?;
+                self.match_tok(INT_TOK)?; // int
                 return Ok(VarType::Int);
             }
             Token::Keyword(Keyword::Float) => {
-                self.match_tok(FLOAT_TOK)?;
+                self.match_tok(FLOAT_TOK)?; // float
                 return Ok(VarType::Float);
             }
             _ => {}
@@ -142,11 +147,13 @@ impl Parser {
         ));
     }
 
-    /// idlist , ID | ID
+    /// idlist, ID | ID
     fn parse_id_list(&mut self) -> Result<Box<[Lexeme]>, CompilationError> {
         let mut id_list = Vec::new();
         id_list.push(self.parse_id()?);
         while let Ok(_) = self.match_tok(COMMA_TOK) {
+            // ,
+            // ,
             id_list.push(self.parse_id()?);
         }
         return Ok(id_list.into_boxed_slice());
@@ -154,12 +161,12 @@ impl Parser {
 
     /// INPUT ( ID ) ;
     fn parse_input_statement(&mut self) -> Result<(), CompilationError> {
-        self.match_tok(INPUT_TOK)?;
-        self.match_tok(LPAREN_TOK)?;
+        self.match_tok(INPUT_TOK)?; // input
+        self.match_tok(LPAREN_TOK)?; // (
         let var_name = self.parse_id()?.0;
-        self.match_tok(RPAREN_TOK)?;
-        self.match_tok(SEMIC_TOK)?;
-        // Generate the code for the input statement
+        self.match_tok(RPAREN_TOK)?; // )
+        self.match_tok(SEMIC_TOK)?; // ;
+                                    // Generate the code for the input statement
         let generated_code =
             self.code_generator
                 .gen_input_stmt(&var_name)
@@ -176,11 +183,11 @@ impl Parser {
 
     /// OUTPUT ( expression ) ;
     fn parse_output_statement(&mut self) -> Result<(), CompilationError> {
-        self.match_tok(OUTPUT_TOK)?;
-        self.match_tok(LPAREN_TOK)?;
-        let expr = self.parse_expression()?;
-        self.match_tok(RPAREN_TOK)?;
-        self.match_tok(SEMIC_TOK)?;
+        self.match_tok(OUTPUT_TOK)?; // output
+        self.match_tok(LPAREN_TOK)?; // (
+        let expr = self.parse_expression()?; // expression
+        self.match_tok(RPAREN_TOK)?; // )
+        self.match_tok(SEMIC_TOK)?; // ;
         let generated_code = self
             .code_generator
             .gen_output_stmt(expr)
@@ -199,6 +206,7 @@ impl Parser {
     pub fn parse_expression(&mut self) -> Result<Expression, CompilationError> {
         let term = self.parse_term()?;
         if let Ok(addop) = self.match_tok(ADDOP_TOK) {
+            // + | -
             let binop = BinaryOp::from_lexeme(addop);
             return Ok(Expression::binary_op(
                 term,
@@ -215,6 +223,7 @@ impl Parser {
     pub fn parse_boolexpr(&mut self) -> Result<BoolExpr, CompilationError> {
         let term = self.parse_boolterm()?;
         if let Ok(..) = self.match_tok(OR_TOK) {
+            // ||
             return Ok(BoolExpr::or(
                 term,
                 self.parse_boolexpr()?,
@@ -229,6 +238,7 @@ impl Parser {
     fn parse_boolterm(&mut self) -> Result<BoolExpr, CompilationError> {
         let factor = self.parse_boolfactor()?;
         if let Ok(..) = self.match_tok(AND_TOK) {
+            // &&
             return Ok(BoolExpr::and(
                 factor,
                 self.parse_boolterm()?,
@@ -243,6 +253,7 @@ impl Parser {
     fn parse_term(&mut self) -> Result<Expression, CompilationError> {
         let factor = self.parse_factor()?;
         if let Ok(mulop) = self.match_tok(MULOP_TOK) {
+            // * | /
             let binop = BinaryOp::from_lexeme(mulop);
             return Ok(Expression::binary_op(
                 factor,
@@ -260,18 +271,18 @@ impl Parser {
         let lookahead = self.lookahead_tok()?;
         match lookahead {
             NOT_TOK => {
-                self.match_tok(NOT_TOK)?;
-                self.match_tok(LPAREN_TOK)?;
+                self.match_tok(NOT_TOK)?; // not
+                self.match_tok(LPAREN_TOK)?; // (
                 let bool_expr = self.parse_boolexpr()?;
-                self.match_tok(RPAREN_TOK)?;
+                self.match_tok(RPAREN_TOK)?; // )
                 return Ok(bool_expr);
             }
             _ => (),
         }
 
-        let expr1 = self.parse_expression()?;
-        let relop_lexeme = self.match_tok(RELOP_TOK)?;
-        let expr2 = self.parse_expression()?;
+        let expr1 = self.parse_expression()?; // expression
+        let relop_lexeme = self.match_tok(RELOP_TOK)?; // > | < | == | != || <= || >=
+        let expr2 = self.parse_expression()?; // expression
 
         return Ok(BoolExpr::relop(
             expr1,
@@ -286,18 +297,18 @@ impl Parser {
         let lookahead = self.lookahead_tok()?;
         match lookahead {
             CAST_TOK => {
-                return self.parse_cast_expr();
+                return self.parse_cast_expr(); // static_cast<{type}> ( expression )
             }
             ID_TOK => {
-                return self.parse_id_expr();
+                return self.parse_id_expr(); // ID
             }
             NUM_TOK => {
-                return self.parse_num_expr();
+                return self.parse_num_expr(); // {int / float  literal}
             }
             LPAREN_TOK => {
-                self.match_tok(LPAREN_TOK)?;
-                let expr = self.parse_expression();
-                self.match_tok(RPAREN_TOK)?;
+                self.match_tok(LPAREN_TOK)?; // (
+                let expr = self.parse_expression(); // expression
+                self.match_tok(RPAREN_TOK)?; // )
                 return expr;
             }
             lookahead_tok => {
@@ -315,7 +326,7 @@ impl Parser {
 
     /// CAST ( expression )
     fn parse_cast_expr(&mut self) -> Result<Expression, CompilationError> {
-        let cast_lexeme = self.match_tok(CAST_TOK)?;
+        let cast_lexeme = self.match_tok(CAST_TOK)?; // static_cast<{type}>
         let cast_type: VarType;
         match &*cast_lexeme.0 {
             "static_cast<int>" => cast_type = VarType::Int,
@@ -328,9 +339,9 @@ impl Parser {
             }
         }
 
-        self.match_tok(LPAREN_TOK)?;
-        let expr_to_cast = self.parse_expression()?;
-        self.match_tok(RPAREN_TOK)?;
+        self.match_tok(LPAREN_TOK)?; // (
+        let expr_to_cast = self.parse_expression()?; // expression
+        self.match_tok(RPAREN_TOK)?; // )
 
         if expr_to_cast.ty == cast_type {
             return Ok(expr_to_cast);
@@ -345,7 +356,7 @@ impl Parser {
 
     /// ID (variable name)
     fn parse_id_expr(&mut self) -> Result<Expression, CompilationError> {
-        let var_name = self.match_tok(ID_TOK)?.0;
+        let var_name = self.match_tok(ID_TOK)?.0; // ID
         let var_type = self
             .code_generator
             .get_var_type(&var_name)
@@ -361,7 +372,7 @@ impl Parser {
 
     /// digit+(.digit+)?
     fn parse_num_expr(&mut self) -> Result<Expression, CompilationError> {
-        let raw_num_str = self.match_tok(NUM_TOK)?.0;
+        let raw_num_str = self.match_tok(NUM_TOK)?.0; // {int / float literal}
         let raw_num_str = raw_num_str.trim();
         if raw_num_str.contains(".") {
             // Parse as a float
@@ -387,9 +398,9 @@ impl Parser {
                 "Number was parsed as variable name".into(),
             ));
         };
-        self.match_tok(EQ_TOK)?;
+        self.match_tok(EQ_TOK)?; // =
         let expr = self.parse_expression()?;
-        self.match_tok(SEMIC_TOK)?;
+        self.match_tok(SEMIC_TOK)?; // ;
         self.generated_code.push_str(
             &self
                 .code_generator
@@ -425,8 +436,8 @@ impl Parser {
 
         self.push_generated_code(&boolexpr.code_generated); // boolexpr code
         self.push_generated_code(&self.code_generator.gen_jump_if_false(else_label, boolexpr)); // Jump to else if false
-        self.parse_stmt()?;
-        self.match_tok(ELSE_TOK)?;
+        self.parse_stmt()?; // stmt
+        self.match_tok(ELSE_TOK)?; // else
         self.push_generated_code(&self.code_generator.gen_jump_to_label(post_label)); // Jump to post after stmt if true
         self.push_generated_code(&self.code_generator.gen_label_decleration(else_label)); // Declare else label
         self.parse_stmt()?;
@@ -485,9 +496,9 @@ impl Parser {
 
     /// { stmtlist }
     fn parse_stmt_block(&mut self) -> Result<(), CompilationError> {
-        self.match_tok(LCURLY_TOK)?;
-        self.parse_stmtlist()?;
-        self.match_tok(RCURLY_TOK)?;
+        self.match_tok(LCURLY_TOK)?; // {
+        self.parse_stmtlist()?; // stmtlist
+        self.match_tok(RCURLY_TOK)?; // }
         return Ok(());
     }
 

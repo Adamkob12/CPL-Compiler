@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 mod boolexpr;
 mod codegen;
 mod compiler;
@@ -15,7 +14,6 @@ use walkdir::WalkDir;
 
 const INPUT_DIRECTORY: &str = "input";
 const OUTPUT_DIRECTORY: &str = "output";
-
 const INPUT_FILE_EXTENSION: &str = "ou";
 const OUTPUT_FILE_EXTENSION: &str = "qud";
 
@@ -64,7 +62,6 @@ fn main() -> Result<(), &'static str> {
         for arg in args.into_iter().skip(1) {
             files.push(arg);
         }
-
         for file in files {
             let input_file_path = Path::new(&file);
             let output_file_path = input_file_path.with_extension(OUTPUT_FILE_EXTENSION);
@@ -79,7 +76,6 @@ fn main() -> Result<(), &'static str> {
             }
         }
     }
-
     Ok(())
 }
 
@@ -219,6 +215,7 @@ mod tests {
         return parser.parse_expression().unwrap().code_generated;
     }
 
+    #[allow(dead_code)]
     fn compile_bool_expression_with_variables(expr: &str, vars: &[(String, VarType)]) -> String {
         let mut parser = Parser::new(Lexer::lex_tokens(String::from(expr)));
         for (var_name, var_type) in vars.into_iter() {

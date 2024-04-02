@@ -83,7 +83,6 @@ pub enum NonToken {
     Spaces,
     StartComment,
     EndComment,
-    EOF,
     Error(&'static str),
 }
 

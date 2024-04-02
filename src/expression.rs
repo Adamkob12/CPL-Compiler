@@ -3,12 +3,18 @@ use crate::{
     lexer::Lexeme,
 };
 
+/// An object with the information needed to parse an expression.
+/// ty: The type of the expression (Int / Float)
+/// code_ref: The way to reference this expression in code (variable name / int literal / float literal)
+/// code_generated: The code it took to generate this expression so far
 pub struct Expression {
     pub ty: VarType,
     pub code_ref: CodeReference,
     pub code_generated: String,
 }
 
+/// Binary operation between two expression
+/// Expression BinaryOp Expression
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum BinaryOp {
     Add, // +
@@ -30,6 +36,7 @@ impl BinaryOp {
 }
 
 impl Expression {
+    /// Cast this expression as another type
     pub fn cast(cast_type: VarType, expr_to_cast: Expression, codegen: &mut CodeGenerator) -> Self {
         let var_name = codegen.new_tmp_var(cast_type);
         let mut code_generated = expr_to_cast.code_generated;
@@ -46,6 +53,7 @@ impl Expression {
         };
     }
 
+    /// An expression that is just a variable
     pub fn variable(var_name: Box<str>, var_type: VarType) -> Self {
         return Self {
             ty: var_type,
@@ -54,6 +62,7 @@ impl Expression {
         };
     }
 
+    /// An expression that is just an integer literal
     pub fn int_literal(num: i32) -> Self {
         return Self {
             ty: VarType::Int,
@@ -62,6 +71,7 @@ impl Expression {
         };
     }
 
+    /// An expression that is just an float literal
     pub fn float_literal(num: f32) -> Self {
         return Self {
             ty: VarType::Float,
@@ -70,6 +80,7 @@ impl Expression {
         };
     }
 
+    /// A binary operation between two expressions
     pub fn binary_op(
         mut expr1: Expression,
         mut expr2: Expression,
@@ -77,6 +88,7 @@ impl Expression {
         codegen: &mut CodeGenerator,
     ) -> Self {
         let ty = expr1.ty.combine(expr2.ty);
+        // Infer the type of the resulting expression, if needed, cast the expression to a different type.
         match (expr1.ty, expr2.ty) {
             (VarType::Float, VarType::Int) => {
                 expr2 = Expression::cast(VarType::Float, expr2, codegen);
@@ -86,6 +98,7 @@ impl Expression {
             }
             _ => {}
         }
+        // Inherit the code generated of the other expressions.
         let tmp_var = codegen.new_tmp_var(ty);
         let code_generated = format!(
             "{}{}{}",

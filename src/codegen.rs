@@ -11,7 +11,14 @@ const OUTPUT_INT_COMMAND: &str = "IPRT";
 const OUTPUT_FLOAT_COMMAND: &str = "RPRT";
 const ASSIGN_INT_COMMAND: &str = "IASN";
 const ASSIGN_FLOAT_COMMAND: &str = "RASN";
+const JUMP_COMMAND: &str = "JUMP";
+const JUMP_IF_ZERO_COMMAND: &str = "JMPZ";
 
+/// Reference an expression's result in code. For example:
+/// To compile the expression: (1 + 2) * 3
+/// The compiler will generate:
+/// t0 = 1 + 2  --  the CodeReference of (1 + 2) is t0.
+/// t1 = t0 * 3 -- the CodeReference of (1 + 2) * 3 is t1.
 #[derive(Clone)]
 pub enum CodeReference {
     IntLiteral(i32),
@@ -19,6 +26,7 @@ pub enum CodeReference {
     VarName(Box<str>),
 }
 
+/// Object to keep track of information about generated code. Keep track of the labels, temporary variables, and the types of registered variables.
 #[derive(Default)]
 pub struct CodeGenerator {
     labels: usize,
@@ -26,19 +34,24 @@ pub struct CodeGenerator {
     var_types: HashMap<&'static str, VarType>,
 }
 
+/// The type of a variable
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub enum VarType {
     Float,
     Int,
 }
 
+/// An object to keep track of a label
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Label {
     id: usize,
 }
 
 impl VarType {
-    // The type of the result of some binary operation. `self` and `other` are the types of the two operands.
+    /// The type of the result of some binary operation. `self` and `other` are the types of the two operands.
+    /// For example:
+    /// <int> + <float> = <float>
+    /// <int> + <int> = <int>
     pub fn combine(self, other: Self) -> Self {
         use VarType::*;
         return match (self, other) {
@@ -47,6 +60,7 @@ impl VarType {
         };
     }
 
+    /// For printing
     pub fn as_str(&self) -> &'static str {
         return match self {
             VarType::Float => "float",
@@ -60,6 +74,7 @@ impl CodeGenerator {
         return Self::default();
     }
 
+    /// Get the type of a registered variable.
     pub fn get_var_type(&self, var_name: &str) -> Result<VarType, CodeGenErrorKind> {
         return self
             .var_types
@@ -76,10 +91,12 @@ impl CodeGenerator {
             ));
     }
 
+    /// Register a new variable into the type table.
     pub fn register_variable(&mut self, var_name: &'static str, ty: VarType) {
         self.var_types.insert(var_name, ty);
     }
 
+    /// Create a new temporary variable, it's name will be "_t{id}"
     pub fn new_tmp_var(&mut self, ty: VarType) -> CodeReference {
         let tmp_var_name = String::leak(format!("_t{}", self.tmp_variables));
         self.tmp_variables += 1;
@@ -162,6 +179,7 @@ impl CodeGenerator {
         return format!("{} {} {} {}\n", op, a, b, c);
     }
 
+    /// Generate an output statement
     pub fn gen_output_stmt(&mut self, expr: Expression) -> Result<String, CodeGenErrorKind> {
         let mut output = String::new();
         // Add the code it took to generate the expression to the output
@@ -224,6 +242,7 @@ impl CodeGenerator {
         return Ok(output);
     }
 
+    /// Register a new label, and return a struct to identify it.
     pub fn new_label(&mut self) -> Label {
         self.labels += 1;
         return Label {
@@ -236,11 +255,14 @@ impl CodeGenerator {
     }
 
     pub fn gen_jump_to_label(&self, label: Label) -> String {
-        return format!("JUMP L{}\n", label.id);
+        return format!("{} L{}\n", JUMP_COMMAND, label.id);
     }
 
     pub fn gen_jump_if_false(&self, label: Label, boolexpr: BoolExpr) -> String {
-        return format!("JMPZ L{} {}\n", label.id, boolexpr.code_ref);
+        return format!(
+            "{} L{} {}\n",
+            JUMP_IF_ZERO_COMMAND, label.id, boolexpr.code_ref
+        );
     }
 }
 
