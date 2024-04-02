@@ -3,7 +3,31 @@
 This is a compiler for a simple language called CPL (Compiler Project Language).
 The compiler compiles CPL code to Quad code, which is a simple assembly-like language.
 
+### How to run:
+
+The compiler takes in files with an extension of `.ou` and outputs a file with the same name but with a `.qud` extension.
+
+To compile every file in the `input` folder:
+
+```bash
+cargo run
+```
+
+To compile a specific file:
+
+```bash
+cargo run <file_name>
+```
+
+After compiling the file, you can run it using the interpreter:
+
+```bash
+python interpreter.py <file_name>
+```
+
 ### CPL Grammer:
+
+```
 
 program -> declarations stmt_block
 
@@ -69,7 +93,11 @@ factor -> '(' expression ')'
 | ID
 | NUM
 
+```
+
 ### Quad Spec:
+
+```
 
 IASN A B A := B
 
@@ -125,24 +153,4 @@ JMPZ L A If A=0 then jump to instruction number L else
 
 HALT Stop immediately.
 
-### How to run:
-
-The compiler takes in files with an extension of `.ou` and outputs a file with the same name but with a `.qud` extension.
-
-To compile every file in the `input` folder:
-
-```bash
-cargo run
-```
-
-To compile a specific file:
-
-```bash
-cargo run <file_name>
-```
-
-After compiling the file, you can run it using the interpreter:
-
-```bash
-python interpreter.py <file_name>
 ```

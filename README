@@ -1,0 +1,139 @@
+<h1 id="cpl-to-quad-compiler">CPL to Quad compiler</h1>
+<p>This is a compiler for a simple language called CPL (Compiler Project
+Language). The compiler compiles CPL code to Quad code, which is a
+simple assembly-like language.</p>
+<h3 id="cpl-grammer">CPL Grammer:</h3>
+<pre><code>
+program -&gt; declarations stmt_block
+
+declarations -&gt; declarations declaration
+| epsilon
+
+declaration -&gt; idlist &#39;:&#39; type &#39;;&#39;
+
+type -&gt; INT | FLOAT
+
+idlist -&gt; idlist &#39;,&#39; ID | ID
+
+stmt -&gt; assignment_stmt
+| input_stmt
+| output_stmt
+| if_stmt
+| while_stmt
+| switch_stmt
+| break_stmt
+| stmt_block
+
+assignment_stmt -&gt; ID &#39;=&#39; expression &#39;;&#39;
+
+input_stmt -&gt; INPUT &#39;(&#39; ID &#39;)&#39; &#39;;&#39;
+
+output_stmt -&gt; OUTPUT &#39;(&#39; expression &#39;)&#39; &#39;;&#39;
+
+if_stmt -&gt; IF &#39;)&#39; boolexpr &#39;(&#39; stmt ELSE stmt
+
+while_stmt -&gt; WHILE &#39;)&#39; boolexpr &#39;(&#39; stmt
+
+switch_stmt -&gt; SWITCH &#39;(&#39; expression &#39;)&#39; &#39;{&#39; caselist
+
+DEFAULT &#39;:&#39; stmtlist &#39;}&#39;
+
+caselist -&gt; caselist CASE NUM &#39;:&#39; stmtlist
+| epsilon
+
+break_stmt -&gt; BREAK &#39;;&#39;
+
+stmt_block -&gt; &#39;{&#39; stmtlist &#39;}&#39;
+
+stmtlist -&gt; stmtlist stmt
+| epsilon
+
+boolexpr -&gt; boolexpr OR boolterm
+| boolterm
+
+boolterm -&gt; boolterm AND boolfactor
+| boolfactor
+
+boolfactor -&gt; NOT &#39;(&#39; boolexpr &#39;)&#39;
+| expression RELOP expression
+
+expression -&gt; expression ADDOP term
+| term
+
+term -&gt; term MULOP factor
+| factor
+
+factor -&gt; &#39;(&#39; expression &#39;)&#39;
+| CAST &#39;(&#39; expression &#39;)&#39;
+| ID
+| NUM
+</code></pre>
+<h3 id="quad-spec">Quad Spec:</h3>
+<pre><code>
+IASN A B A := B
+
+IPRT B Print the value of B
+
+IINP A Read an integer into A
+
+IEQL A B C If B=C then A:=1 else A:=0
+
+INQL A B C If B&lt;&gt;C then A:=1 else A:=0
+
+ILSS A B C If B&lt;C then A:=1 else A:=0
+
+IGRT A B C If B&gt;C then A:=1 else A:=0
+
+IADD A B C A:=B+C
+
+ISUB A B C A:=B-C
+
+IMLT A B C A:=B\*C
+
+IDIV A B C A:=B/C
+
+RASN D E D := E
+
+RPRT E Print the value of E
+
+RINP D Read a real into D
+
+REQL A E F If E=F then A:=1 else A:=0
+
+RNQL A E F If E&lt;&gt;F then A:=1 else A:=0
+
+RLSS A E F If E&lt;F then A:=1 else A:=0
+
+RGRT A E F If E&gt;F then A:=1 else A:=0
+
+RADD D E F D:=E+F
+
+RSUB D E F D:=E-F
+
+RMLT D E F D:=E\*F
+
+RDIV D E F D:=E/F
+
+ITOR D B D:= real(B)
+
+RTOI A E A:= integer(E)
+
+JUMP L Jump to Instruction number L
+
+JMPZ L A If A=0 then jump to instruction number L else
+
+HALT Stop immediately.
+</code></pre>
+<h3 id="how-to-run">How to run:</h3>
+<p>The compiler takes in files with an extension of <code>.ou</code> and
+outputs a file with the same name but with a <code>.qud</code>
+extension.</p>
+<p>To compile every file in the <code>input</code> folder:</p>
+<div class="sourceCode" id="cb3"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run</span></code></pre></div>
+<p>To compile a specific file:</p>
+<div class="sourceCode" id="cb4"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">cargo</span> run <span class="op">&lt;</span>file_name<span class="op">&gt;</span></span></code></pre></div>
+<p>After compiling the file, you can run it using the interpreter:</p>
+<div class="sourceCode" id="cb5"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> interpreter.py <span class="op">&lt;</span>file_name<span class="op">&gt;</span></span></code></pre></div>
