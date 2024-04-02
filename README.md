@@ -16,13 +16,15 @@ cargo run
 To compile a specific file:
 
 ```bash
-cargo run <file_name>
+cargo run <file_to_compile>
 ```
 
-After compiling the file, you can run it using the interpreter:
+Since Quad doesn't actually interface with real assembly, we need an interpeter to run the compiled code. The interpreter is written in Python and can be found in `interpreter.py`.
+
+To run the compiled file:
 
 ```bash
-python interpreter.py <file_name>
+python interpreter.py <compiled_file>
 ```
 
 ## CPL Grammer:
