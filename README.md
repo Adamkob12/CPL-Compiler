@@ -3,7 +3,7 @@
 This is a compiler for a simple language called CPL (Compiler Project Language).
 The compiler compiles CPL code to Quad code, which is a simple assembly-like language.
 
-### How to run:
+## How to run:
 
 The compiler takes in files with an extension of `.ou` and outputs a file with the same name but with a `.qud` extension.
 
@@ -25,7 +25,7 @@ After compiling the file, you can run it using the interpreter:
 python interpreter.py <file_name>
 ```
 
-### CPL Grammer:
+## CPL Grammer:
 
 ```
 
@@ -95,7 +95,7 @@ factor -> '(' expression ')'
 
 ```
 
-### Quad Spec:
+## Quad Spec:
 
 ```
 
