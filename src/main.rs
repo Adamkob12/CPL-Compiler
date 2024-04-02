@@ -95,13 +95,13 @@ fn compile_file(input_file_path: &Path) -> Option<String> {
     if file_extension == INPUT_FILE_EXTENSION {
         let input_as_string =
             read_to_string(input_file_path).expect("Couldn't parse the input file into a string");
-        eprintln!("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-        eprintln!("         Compiling {:?}", input_file_path);
+        println!("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        println!("         Compiling {:?}", input_file_path);
         return Compiler::init(input_as_string.clone())
             .compile()
             .inspect(|_| {
-                eprintln!("\n         Compiled {:?} Successfully", input_file_path);
-                eprintln!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+                println!("\n         Compiled {:?} Successfully", input_file_path);
+                println!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
             });
     }
     return None;
