@@ -8,11 +8,10 @@ mod lexer;
 mod parser;
 mod token;
 
+use crate::compiler::Compiler;
 use std::fs::{read_to_string, write, File};
 use std::path::Path;
 use walkdir::WalkDir;
-
-use crate::compiler::Compiler;
 
 const INPUT_DIRECTORY: &str = "input";
 const OUTPUT_DIRECTORY: &str = "output";
@@ -24,66 +23,92 @@ fn main() -> Result<(), &'static str> {
     let input_dir = Path::new(INPUT_DIRECTORY);
     let output_dir = Path::new(OUTPUT_DIRECTORY);
 
-    // Iterate over all of the files in the input folder
-    for input_file in WalkDir::new(input_dir).into_iter() {
-        if input_file.is_err() {
-            eprintln!("Error: {}", input_file.unwrap_err());
-            continue;
-        }
+    let args: Vec<String> = std::env::args().collect();
 
-        // Extract the file
-        let input_file = input_file.unwrap();
+    if args.len() == 1 {
+        // Iterate over all of the files in the input folder
+        for input_file in WalkDir::new(input_dir).into_iter() {
+            if input_file.is_err() {
+                eprintln!("Error: {}", input_file.unwrap_err());
+                continue;
+            }
 
-        // Skip directories
-        if !input_file.metadata().unwrap().is_file() {
-            continue;
-        }
+            // Extract the file
+            let input_file = input_file.unwrap();
 
-        let input_file_path = input_file.path();
+            // Skip directories
+            if !input_file.metadata().unwrap().is_file() {
+                continue;
+            }
 
-        let output_file_path = output_dir.join(
-            input_file_path
-                .strip_prefix(INPUT_DIRECTORY)
-                .unwrap()
-                .with_extension(OUTPUT_FILE_EXTENSION),
-        );
-
-        let file_extension = input_file_path.extension();
-
-        if file_extension.is_none() {
-            eprintln!(
-                "Error: File {:?} has no extension, expected <.{}> extension",
-                input_file.path(),
-                INPUT_FILE_EXTENSION
+            let input_file_path = input_file.path();
+            let output_file_path = output_dir.join(
+                input_file_path
+                    .strip_prefix(INPUT_DIRECTORY)
+                    .unwrap()
+                    .with_extension(OUTPUT_FILE_EXTENSION),
             );
-            continue;
+
+            if let Some(compiled) = compile_file(input_file_path) {
+                File::create(&output_file_path)
+                    .expect("Couldn't create the output file")
+                    .set_len(0)
+                    .expect("Couldn't truncate the output file");
+                write(output_file_path, compiled).expect("Couldn't write to the output file");
+            } else {
+                eprintln!("Errors whle compiling file: {:?}", input_file_path);
+            }
+        }
+    } else {
+        let mut files = Vec::new();
+        for arg in args.into_iter().skip(1) {
+            files.push(arg);
         }
 
-        let file_extension = file_extension.unwrap();
-
-        if file_extension == INPUT_FILE_EXTENSION {
-            let input_as_string = read_to_string(input_file_path)
-                .expect("Couldn't parse the input file into a string");
-            eprintln!("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
-            eprintln!("         Compiling {:?}", input_file_path);
-            let compiled =
-                Compiler::init(input_as_string.clone())
-                    .compile()
-                    .ok_or(&*String::leak(format!(
-                        "Could not compile {:?} because of the errors above.",
-                        input_file_path
-                    )))?;
-            File::create(&output_file_path)
-                .expect("Couldn't create the output file")
-                .set_len(0)
-                .expect("Couldn't truncate the output file");
-            write(output_file_path, compiled).expect("Couldn't write to the output file");
-
-            eprintln!("\n         Compiled {:?} Successfully", input_file_path);
-            eprintln!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        for file in files {
+            let input_file_path = Path::new(&file);
+            let output_file_path = input_file_path.with_extension(OUTPUT_FILE_EXTENSION);
+            if let Some(compiled) = compile_file(input_file_path) {
+                File::create(&output_file_path)
+                    .expect("Couldn't create the output file")
+                    .set_len(0)
+                    .expect("Couldn't truncate the output file");
+                write(&output_file_path, compiled).expect("Couldn't write to the output file");
+            } else {
+                eprintln!("Errors whle compiling file: {:?}", input_file_path);
+            }
         }
     }
+
     Ok(())
+}
+
+fn compile_file(input_file_path: &Path) -> Option<String> {
+    let file_extension = input_file_path.extension();
+
+    if file_extension.is_none() {
+        eprintln!(
+            "Error: File {:?} has no extension, expected <.{}> extension",
+            input_file_path, INPUT_FILE_EXTENSION
+        );
+        return None;
+    }
+
+    let file_extension = file_extension.unwrap();
+
+    if file_extension == INPUT_FILE_EXTENSION {
+        let input_as_string =
+            read_to_string(input_file_path).expect("Couldn't parse the input file into a string");
+        eprintln!("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+        eprintln!("         Compiling {:?}", input_file_path);
+        return Compiler::init(input_as_string.clone())
+            .compile()
+            .inspect(|_| {
+                eprintln!("\n         Compiled {:?} Successfully", input_file_path);
+                eprintln!("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+            });
+    }
+    return None;
 }
 
 // TESTS
